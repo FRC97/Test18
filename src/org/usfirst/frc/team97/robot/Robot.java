@@ -24,13 +24,13 @@
  * - Right 4: Left Drive Trim Down
  * - Right 5: Left Drive Trim Up
  */
-
+// TODO: I still need to get the gyro working...
 
 package org.usfirst.frc.team97.robot;
 
 import com.ctre.phoenix.motorcontrol.can.*;
 
-import edu.wpi.cscore.CameraServerJNI;
+import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
@@ -57,6 +57,12 @@ public class Robot extends IterativeRobot {
 	// Inputs
 	Joystick r_stick;
 	Joystick l_stick;
+	
+	// Gyro
+	AnalogGyro gyro;
+	
+	long now;
+	double dist;
 	
 	//Camera
 	
@@ -116,9 +122,13 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Drive Left Trim", drive_l_trim);
 		SmartDashboard.putNumber("Shoot Right Trim", shoot_r_trim);
 		SmartDashboard.putNumber("Shoot Left Trim", shoot_l_trim);
-
 		
 		bdelay_shoot = bdelay_drive = 0;
+		
+		// Gyro
+		gyro = new AnalogGyro(0);
+		gyro.calibrate();
+		now = System.currentTimeMillis();
 	}
 
 	/**
@@ -153,7 +163,7 @@ public class Robot extends IterativeRobot {
 		checkShoot();
 	}
 	
-	public void checkShoot() {
+	private void checkShoot() {
 		// Right side will trim up (5) and down (4) within range 0 to 1
 		if(r_stick.getRawButton(11) && shoot_r_trim < 1) shoot_r_trim += .01;
 		if(r_stick.getRawButton(10) && shoot_r_trim > 0) shoot_r_trim -= .01;
@@ -176,7 +186,7 @@ public class Robot extends IterativeRobot {
 			shoot.tankDrive(shoot_l_trim, shoot_r_trim);
 	}
 
-	public void checkDrive() {
+	private void checkDrive() {
 		// Right side will trim up (5) and down (4) within range 0 to 1
 		if(r_stick.getRawButton(5) && drive_r_trim < 1) drive_r_trim += .01;
 		if(r_stick.getRawButton(4) && drive_r_trim > 0) drive_r_trim -= .01;
@@ -200,7 +210,7 @@ public class Robot extends IterativeRobot {
 			drive.tankDrive(-l_stick.getY() * drive_spd * drive_l_trim, -r_stick.getY() * drive_spd * drive_r_trim, true);
 	}
 	
-	public void checkDraw() {
+	private void checkDraw() {
 		SmartDashboard.putNumber("Draw Speed Master", (draw_spd = (1-l_stick.getRawAxis(2))/2));
 		if(l_stick.getRawButton(2)) {
 			draw_motors[1].set(-1 * draw_spd);
@@ -233,5 +243,6 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void testPeriodic() {
+		now = System.currentTimeMillis();
 	}
 }
