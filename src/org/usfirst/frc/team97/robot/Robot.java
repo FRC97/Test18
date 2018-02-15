@@ -60,14 +60,6 @@ public class Robot extends IterativeRobot {
 	Joystick r_stick;
 	Joystick l_stick;
 
-	// Gyro
-	AnalogGyro gyro;
-
-	long now;
-	double dist;
-
-	// Camera
-
 	// delay used for drive and shoot on/off
 	int bdelay_shoot;
 	int bdelay_drive;
@@ -136,9 +128,12 @@ public class Robot extends IterativeRobot {
 		bdelay_shoot = bdelay_drive = 0;
 
 		// Gyro
+		AnalogGyro gyro;
+
+		// Gyro
 		gyro = new AnalogGyro(0);
 		gyro.calibrate();
-		now = System.currentTimeMillis();
+		SmartDashboard.putNumber("Angle", gyro.getAngle());
 	}
 
 	/**
@@ -249,10 +244,10 @@ public class Robot extends IterativeRobot {
 	private void checkDraw() {
 		SmartDashboard.putNumber("Draw Speed Master", (draw_spd = (1 - l_stick.getRawAxis(2)) / 2));
 		if (l_stick.getRawButton(2)) {
-			draw_motors[1].set(-1 * draw_spd);
+			draw_motors[1].set(1 * draw_spd);
 			SmartDashboard.putString("Draw", "left in");
 		} else if (l_stick.getRawButton(3)) {
-			draw_motors[1].set(1 * draw_spd);
+			draw_motors[1].set(-1 * draw_spd);
 			SmartDashboard.putString("Draw", "left out");
 		} else {
 			draw_motors[1].set(0);
@@ -269,12 +264,11 @@ public class Robot extends IterativeRobot {
 			SmartDashboard.putString("Draw", "none");
 		}
 	}
-
+	
 	/**
 	 * This function is called periodically during test mode.
 	 */
 	@Override
 	public void testPeriodic() {
-		now = System.currentTimeMillis();
 	}
 }
