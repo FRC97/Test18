@@ -28,6 +28,8 @@
 
 package org.usfirst.frc.team97.robot;
 
+import org.opencv.core.Range;
+
 import com.ctre.phoenix.motorcontrol.can.*;
 
 import edu.wpi.first.wpilibj.AnalogGyro;
@@ -38,7 +40,10 @@ import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.ADXL362;
 
 /**
  * This is the robot
@@ -59,7 +64,7 @@ public class Robot extends IterativeRobot {
 	// Inputs
 	Joystick r_stick;
 	Joystick l_stick;
-
+	
 	// delay used for drive and shoot on/off
 	int bdelay_shoot;
 	int bdelay_drive;
@@ -74,6 +79,12 @@ public class Robot extends IterativeRobot {
 	double shootX_r_trim = 1;
 	double shootX_l_trim = 1;
 
+	// Acc
+	ADXL362 acc;
+	
+	// Gyro
+	ADXRS450_Gyro gyro;
+	
 	/**
 	 * This function is run when the robot is first started up and should be used
 	 * for any initialization code.
@@ -127,13 +138,13 @@ public class Robot extends IterativeRobot {
 
 		bdelay_shoot = bdelay_drive = 0;
 
+		// Acc
+		acc = new ADXL362(Accelerometer.Range.k4G);
+		
 		// Gyro
-		AnalogGyro gyro;
-
-		// Gyro
-		gyro = new AnalogGyro(0);
+		gyro = new ADXRS450_Gyro();
 		gyro.calibrate();
-		SmartDashboard.putNumber("Angle", gyro.getAngle());
+		checkSense();
 	}
 
 	/**
@@ -167,6 +178,14 @@ public class Robot extends IterativeRobot {
 		checkDrive();
 		checkDraw();
 		checkShoot();
+		checkSense();
+	}
+	
+	private void checkSense() {
+		SmartDashboard.putNumber("Angle", gyro.getAngle());
+		SmartDashboard.putNumber("accX", acc.getX());
+		SmartDashboard.putNumber("accY", acc.getY());
+		SmartDashboard.putNumber("accZ", acc.getZ());
 	}
 
 	private void checkShoot() {
@@ -237,10 +256,33 @@ public class Robot extends IterativeRobot {
 			bdelay_drive = 0;
 		}
 		if (SmartDashboard.getBoolean("Drive", false))
-			drive.tankDrive(-l_stick.getY() * drive_spd * drive_l_trim, -r_stick.getY() * drive_spd * drive_r_trim,
-					true);
+			drive(-l_stick.getY() * drive_spd * drive_l_trim, -r_stick.getY() * drive_spd * drive_r_trim);
+	}
+	
+	/**
+	 * Drive based on left and right speeds
+	 * 
+	 * @param left - left speed (-1,1)
+	 * @param right - right speed (-1,1)
+	 */
+	private void drive(double left, double right) {
+		drive.tankDrive(left, right, true);
 	}
 
+	/**
+	 * Drive at an angle to the gyro
+	 * 
+	 * @param spd - speed to drive
+	 * @param gyro - AnalogGyro to base target
+	 * @param angle - target angle (-1,1)
+	 */
+	private void driveAngle(double spd, AnalogGyro gyro, double angle) {
+		double adj = (gyro.getAngle() - angle);
+		drive.tankDrive(
+				spd - adj,
+				spd + adj);
+	}
+	
 	private void checkDraw() {
 		SmartDashboard.putNumber("Draw Speed Master", (draw_spd = (1 - l_stick.getRawAxis(2)) / 2));
 		if (l_stick.getRawButton(2)) {
