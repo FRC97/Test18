@@ -41,6 +41,7 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.ADXL362;
 
 /**
@@ -83,13 +84,17 @@ public class Robot extends IterativeRobot {
 	// Gyro
 	ADXRS450_Gyro gyro;
 	
+	// Camera
+	UsbCamera cam_serv;
+	
 	/**
 	 * This function is run when the robot is first started up and should be used
 	 * for any initialization code.
 	 */
 	@Override
 	public void robotInit() {
-		CameraServer.getInstance().startAutomaticCapture();
+		cam_serv = CameraServer.getInstance().startAutomaticCapture();
+		cam_serv.setResolution(1280/2, 720/2);
 
 		drive_motors = new WPI_TalonSRX[4];
 
@@ -273,6 +278,7 @@ public class Robot extends IterativeRobot {
 	 * @param gyro - AnalogGyro to base target
 	 * @param angle - target angle (-1,1)
 	 */
+	@SuppressWarnings("unused")
 	private void driveAngle(double spd, AnalogGyro gyro, double angle) {
 		double adj = (gyro.getAngle() - angle);
 		drive.tankDrive(
