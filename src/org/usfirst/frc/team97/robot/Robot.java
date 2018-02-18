@@ -78,7 +78,7 @@ public class Robot extends IterativeRobot {
 	double shootX_r_trim = 1;
 	double shootX_l_trim = 1;
 	
-	double thresh = 0;
+	double thresh = .4;
 
 	// Acc
 	ADXL362 acc;
@@ -130,6 +130,9 @@ public class Robot extends IterativeRobot {
 
 		// SmartDashboard init
 		SmartDashboard.putBoolean("Drive", false);
+		
+		SmartDashboard.putNumber("thresh", thresh);
+		
 		SmartDashboard.putBoolean("Shoot(X)", false);
 
 		SmartDashboard.putString("Draw", "none");
@@ -259,6 +262,8 @@ public class Robot extends IterativeRobot {
 			SmartDashboard.putBoolean("Drive", !SmartDashboard.getBoolean("Drive", false));
 			bdelay_drive = 0;
 		}
+		
+		thresh = SmartDashboard.getNumber("thresh", 0);
 		if (SmartDashboard.getBoolean("Drive", false))
 			drive(- (l_stick.getY() > 0 ? (thresh+l_stick.getY()/(1-thresh)) : (thresh-l_stick.getY()/(1-thresh)))   * drive_spd * drive_l_trim,
 					-  (r_stick.getY() > 0 ? (thresh+r_stick.getY()/(1-thresh)) : (thresh-r_stick.getY()/(1-thresh)))   * drive_spd * drive_r_trim);
