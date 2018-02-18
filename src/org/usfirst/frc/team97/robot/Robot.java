@@ -78,7 +78,7 @@ public class Robot extends IterativeRobot {
 	double shootX_r_trim = 1;
 	double shootX_l_trim = 1;
 	
-	double thresh = .4;
+	double thresh = .2;
 
 	// Acc
 	ADXL362 acc;
@@ -203,7 +203,7 @@ public class Robot extends IterativeRobot {
 			shoot_r_trim -= .01;
 		SmartDashboard.putNumber("Shoot Right Trim", shoot_r_trim);
 
-		// Light side will trim up (6) and down (7) within range 0 to 1
+		// Left side will trim up (6) and down (7) within range 0 to 1
 		if (l_stick.getRawButton(6) && shoot_l_trim < 1)
 			shoot_l_trim += .01;
 		if (l_stick.getRawButton(7) && shoot_l_trim > 0)
@@ -217,7 +217,7 @@ public class Robot extends IterativeRobot {
 			shootX_r_trim -= .01;
 		SmartDashboard.putNumber("ShootX Right Trim", shootX_r_trim);
 
-		// Light side will trim up (9) and down (8) within range 0 to 1
+		// Left side will trim up (9) and down (8) within range 0 to 1
 		if (l_stick.getRawButton(9) && shootX_l_trim < 1)
 			shootX_l_trim += .01;
 		if (l_stick.getRawButton(8) && shootX_l_trim > 0)
@@ -230,12 +230,12 @@ public class Robot extends IterativeRobot {
 			bdelay_shoot = 0;
 		}
 
-		if (SmartDashboard.getBoolean("Shoot(X)", false /*default*/) && r_stick.getTrigger()) { // Shoot
+		if (SmartDashboard.getBoolean("Shoot(X)", false /*default*/) && r_stick.getTrigger()) { // Shoot High
 			shoot.tankDrive(-shoot_l_trim, -shoot_r_trim);
 			shootX.tankDrive(-shootX_l_trim, -shootX_r_trim);
 		}
-		if (SmartDashboard.getBoolean("Shoot(X)", false /*default*/) && l_stick.getTrigger()) { // Reverse Shooter
-			shoot.tankDrive(shoot_l_trim, shoot_r_trim);
+		if (SmartDashboard.getBoolean("Shoot(X)", false /*default*/) && l_stick.getTrigger()) { // Shooter Low
+			shoot.tankDrive(-.7 * shoot_l_trim, -.7 * shoot_r_trim);
 			shootX.tankDrive(shootX_l_trim, shootX_r_trim);
 		}
 	}
@@ -265,8 +265,8 @@ public class Robot extends IterativeRobot {
 		
 		thresh = SmartDashboard.getNumber("thresh", 0);
 		if (SmartDashboard.getBoolean("Drive", false))
-			drive(- (l_stick.getY() > 0 ? (thresh+l_stick.getY()/(1-thresh)) : (thresh-l_stick.getY()/(1-thresh)))   * drive_spd * drive_l_trim,
-					-  (r_stick.getY() > 0 ? (thresh+r_stick.getY()/(1-thresh)) : (thresh-r_stick.getY()/(1-thresh)))   * drive_spd * drive_r_trim);
+			drive(- (l_stick.getY() > 0 ? (thresh+l_stick.getY()/(1-thresh)) : (l_stick.getY()/(1-thresh)-thresh))   * drive_spd * drive_l_trim,
+					-  (r_stick.getY() > 0 ? (thresh+r_stick.getY()/(1-thresh)) : (r_stick.getY()/(1-thresh)-thresh))   * drive_spd * drive_r_trim);
 	}
 	
 	/**
