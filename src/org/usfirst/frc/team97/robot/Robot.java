@@ -236,7 +236,7 @@ public class Robot extends IterativeRobot {
 		}
 		if (SmartDashboard.getBoolean("Shoot(X)", false /*default*/) && l_stick.getTrigger()) { // Shooter Low
 			shoot.tankDrive(-.7 * shoot_l_trim, -.7 * shoot_r_trim);
-			shootX.tankDrive(shootX_l_trim, shootX_r_trim);
+			shootX.tankDrive(-.7 * shootX_l_trim, -.7 * shootX_r_trim);
 		}
 	}
 
