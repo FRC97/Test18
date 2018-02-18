@@ -77,6 +77,8 @@ public class Robot extends IterativeRobot {
 	double shoot_l_trim = 1;
 	double shootX_r_trim = 1;
 	double shootX_l_trim = 1;
+	
+	double thresh = 0;
 
 	// Acc
 	ADXL362 acc;
@@ -258,11 +260,13 @@ public class Robot extends IterativeRobot {
 			bdelay_drive = 0;
 		}
 		if (SmartDashboard.getBoolean("Drive", false))
-			drive(-l_stick.getY() * drive_spd * drive_l_trim, -r_stick.getY() * drive_spd * drive_r_trim);
+			drive(- (l_stick.getY() > 0 ? (thresh+l_stick.getY()/(1-thresh)) : (thresh-l_stick.getY()/(1-thresh)))   * drive_spd * drive_l_trim,
+					-  (r_stick.getY() > 0 ? (thresh+r_stick.getY()/(1-thresh)) : (thresh-r_stick.getY()/(1-thresh)))   * drive_spd * drive_r_trim);
 	}
 	
 	/**
 	 * Drive based on left and right speeds
+	 * Speed is squared
 	 * 
 	 * @param left - left speed (-1,1)
 	 * @param right - right speed (-1,1)
