@@ -28,6 +28,8 @@
 
 package org.usfirst.frc.team97.robot;
 
+import java.sql.Date;
+
 import com.ctre.phoenix.motorcontrol.can.*;
 
 import edu.wpi.first.wpilibj.AnalogGyro;
@@ -87,7 +89,8 @@ public class Robot extends IterativeRobot {
 	ADXRS450_Gyro gyro;
 	
 	// Camera
-	UsbCamera cam_serv;
+	UsbCamera cam_serv_front;
+	UsbCamera cam_serv_back;
 	
 	/**
 	 * This function is run when the robot is first started up and should be used
@@ -95,8 +98,10 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
-		cam_serv = CameraServer.getInstance().startAutomaticCapture();
-		cam_serv.setResolution(1280/2, 720/2);
+		cam_serv_front = CameraServer.getInstance().startAutomaticCapture(0);
+		cam_serv_front.setResolution(1280/4, 720/4);
+		cam_serv_back = CameraServer.getInstance().startAutomaticCapture(1);
+		cam_serv_back.setResolution(1280/8, 720/8);
 
 		drive_motors = new WPI_TalonSRX[4];
 
@@ -147,7 +152,7 @@ public class Robot extends IterativeRobot {
 		bdelay_shoot = bdelay_drive = 0;
 
 		// Acc
-		acc = new ADXL362(Accelerometer.Range.k4G);
+		acc = new ADXL362(Accelerometer.Range.k2G);
 		
 		// Gyro
 		gyro = new ADXRS450_Gyro();
@@ -155,6 +160,11 @@ public class Robot extends IterativeRobot {
 		checkSense();
 	}
 
+	long initial;
+	long fin;
+	long dist;
+	double vel;
+	double tar;
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select
 	 * between different autonomous modes using the dashboard. The sendable chooser
@@ -168,7 +178,9 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-		
+//		tar = Math.pow(Math.pow(acc.getX(), 2) + Math.pow(acc.getY(), 2) + Math.pow(acc.getZ(), 2), 0.5);
+		initial = System.currentTimeMillis();
+		tar = 0;//gyro.getAngle();
 	}
 
 	/**
@@ -176,6 +188,15 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
+//		initial = System.currentTimeMillis();
+//		dist += (fin - initial) * vel;
+//		SmartDashboard.putNumber("dist", dist);
+		
+		fin = System.currentTimeMillis() - initial;
+		
+		if(fin < 2000) driveAngle(.5, gyro, tar);
+		
+//		fin = System.currentTimeMillis();
 	}
 
 	/**
@@ -285,12 +306,11 @@ public class Robot extends IterativeRobot {
 	 * Drive at an angle to the gyro
 	 * 
 	 * @param spd - speed to drive
-	 * @param gyro - AnalogGyro to base target
+	 * @param gyro2 - AnalogGyro to base target
 	 * @param angle - target angle (-1,1)
 	 */
-	@SuppressWarnings("unused")
-	private void driveAngle(double spd, AnalogGyro gyro, double angle) {
-		double adj = (gyro.getAngle() - angle)/360;
+	private void driveAngle(double spd, ADXRS450_Gyro gyro2, double angle) {
+		double adj = (gyro2.getAngle() - angle)/360;
 		drive.tankDrive(
 				constrain(spd - adj),
 				constrain(spd + adj));
