@@ -188,8 +188,13 @@ public class Robot extends IterativeRobot {
 	/*
 	 * Auto Data:
 	 * spd - time - dist
-	 * .4  - 5000 - 
-	 * .5  - 5000 - 
+	 * .4  - 5000 - 46
+	 * .5  - 5000 - 112.5 + ish
+	 * .6  - 5000 - 16'2.5" + a little
+	 * .7  - 3000 - 172"
+	 * .8  - 2000 - 149"
+	 * .9  - 1500 - 
+	 * .7  - 5000 - 
 	 */
 
 	/**
@@ -204,7 +209,7 @@ public class Robot extends IterativeRobot {
 		fin = System.currentTimeMillis() - initial;
 		
 //		if(fin < 2000) driveAngle(.5, gyro, tar);
-		if(fin < 5000) driveAngle(SmartDashboard.getNumber("autoSpd", 0), gyro, tar);
+		if(fin < 2000) driveAngle(SmartDashboard.getNumber("autoSpd", 0), gyro, tar);
 		
 //		fin = System.currentTimeMillis();
 	}
