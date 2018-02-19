@@ -148,6 +148,8 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Shoot Left Trim", shoot_l_trim);
 		SmartDashboard.putNumber("ShootX Right Trim", shootX_r_trim);
 		SmartDashboard.putNumber("ShootX Left Trim", shootX_l_trim);
+		
+		SmartDashboard.putNumber("autoSpd", 0);
 
 		bdelay_shoot = bdelay_drive = 0;
 
@@ -180,8 +182,15 @@ public class Robot extends IterativeRobot {
 	public void autonomousInit() {
 //		tar = Math.pow(Math.pow(acc.getX(), 2) + Math.pow(acc.getY(), 2) + Math.pow(acc.getZ(), 2), 0.5);
 		initial = System.currentTimeMillis();
-		tar = 0;//gyro.getAngle();
+		tar = gyro.getAngle();
 	}
+	
+	/*
+	 * Auto Data:
+	 * spd - time - dist
+	 * .4  - 5000 - 
+	 * .5  - 5000 - 
+	 */
 
 	/**
 	 * This function is called periodically during autonomous.
@@ -191,10 +200,11 @@ public class Robot extends IterativeRobot {
 //		initial = System.currentTimeMillis();
 //		dist += (fin - initial) * vel;
 //		SmartDashboard.putNumber("dist", dist);
-		
+		checkSense();
 		fin = System.currentTimeMillis() - initial;
 		
-		if(fin < 2000) driveAngle(.5, gyro, tar);
+//		if(fin < 2000) driveAngle(.5, gyro, tar);
+		if(fin < 5000) driveAngle(SmartDashboard.getNumber("autoSpd", 0), gyro, tar);
 		
 //		fin = System.currentTimeMillis();
 	}
@@ -310,7 +320,7 @@ public class Robot extends IterativeRobot {
 	 * @param angle - target angle (-1,1)
 	 */
 	private void driveAngle(double spd, ADXRS450_Gyro gyro2, double angle) {
-		double adj = (gyro2.getAngle() - angle)/360;
+		double adj = (gyro2.getAngle() - angle)/180;
 		drive.tankDrive(
 				constrain(spd - adj),
 				constrain(spd + adj));
