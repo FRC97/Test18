@@ -168,6 +168,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
+		
 	}
 
 	/**
@@ -289,10 +290,18 @@ public class Robot extends IterativeRobot {
 	 */
 	@SuppressWarnings("unused")
 	private void driveAngle(double spd, AnalogGyro gyro, double angle) {
-		double adj = (gyro.getAngle() - angle);
+		double adj = (gyro.getAngle() - angle)/360;
 		drive.tankDrive(
-				spd - adj,
-				spd + adj);
+				constrain(spd - adj),
+				constrain(spd + adj));
+	}
+	
+	private static double constrain(double num, double max, double min) {
+		return (num > max) ? 1 : (num < min) ? 0 : num;
+	}
+	
+	private static double constrain(double num) {
+		return constrain(num, 1, 0);
 	}
 	
 	private void checkDraw() {
