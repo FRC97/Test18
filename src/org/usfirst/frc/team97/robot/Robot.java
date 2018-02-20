@@ -175,10 +175,12 @@ public class Robot extends IterativeRobot {
 	double acc;
 	long last;
 	long current;
-	long dist;
+	long start_time;
+	double dist;
 	double vel;
 	double tar;
-	double acc_trim;
+	double acc_trim_x;
+	double acc_trim_y;
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select
 	 * between different autonomous modes using the dashboard. The sendable chooser
@@ -197,25 +199,31 @@ public class Robot extends IterativeRobot {
 		tar = gyro.getAngle();
 		dist = 0;
 		vel = 0;
-		acc_trim = 0;
-		acc_trim = calAcc(10);
 		acc = getAcc();
+		calAcc(10);
+		
+		start_time = System.currentTimeMillis();
 	}
 	
 	private double getAcc() {
-		return Math.pow(Math.pow(accmt.getX(), 2) + Math.pow(accmt.getY(), 2), 0.5) - acc_trim;
+//		double mag = Math.pow(Math.pow(accmt.getX() - acc_trim_x, 2) + Math.pow(accmt.getY() - acc_trim_y, 2), 0.5);
+//		return (accmt.getY() > 0) ? mag : -mag;
+		return accmt.getY() - acc_trim_y;
 	}
 	
 	/**
 	 * Calibrate accelerometer
 	 * @return
 	 */
-	private double calAcc(int len) {
-		double sum = 0;
+	private void calAcc(int len) {
+		double sum_x = 0;
+		double sum_y = 0;
 		for(int i = 0; i < len; i++) {
-			sum += getAcc();
+			sum_x += accmt.getX();
+			sum_y += accmt.getY();
 		}
-		return sum/len;
+		acc_trim_x = sum_x/len;
+		acc_trim_y = sum_y/len;
 	}
 	
 	/*
@@ -250,7 +258,8 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("dist", dist);
 		SmartDashboard.putNumber("vel", vel);
 		SmartDashboard.putNumber("acc", acc);
-		drive(.45,.45);
+		if(System.currentTimeMillis() - start_time < 2000)
+			drive(SmartDashboard.getNumber("autoSpd", 0),SmartDashboard.getNumber("autoSpd", 0));
 	}
 
 	/**
