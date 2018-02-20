@@ -34,6 +34,7 @@ import com.ctre.phoenix.motorcontrol.can.*;
 
 import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.CameraServer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Spark;
@@ -73,20 +74,23 @@ public class Robot extends IterativeRobot {
 	double drive_spd;
 	double draw_spd;
 
-	double drive_r_trim = 1;
-	double drive_l_trim = 1;
-	double shoot_r_trim = 1;
-	double shoot_l_trim = 1;
-	double shootX_r_trim = 1;
-	double shootX_l_trim = 1;
+//	double drive_r_trim = 1;
+//	double drive_l_trim = 1;
+//	double shoot_r_trim = 1;
+//	double shoot_l_trim = 1;
+//	double shootX_r_trim = 1;
+//	double shootX_l_trim = 1;
 	
+	double shoot_trim = 1;
+	double shootX_trim = 1;
+
 	double thresh = .2;
 
 	// Acc
-	ADXL362 acc;
+	ADXL362 accmt;
 	
 	// Gyro
-	ADXRS450_Gyro gyro;
+	AnalogGyro gyro;
 	
 	// Camera
 	UsbCamera cam_serv_front;
@@ -142,31 +146,39 @@ public class Robot extends IterativeRobot {
 
 		SmartDashboard.putString("Draw", "none");
 
-		SmartDashboard.putNumber("Drive Right Trim", drive_r_trim);
-		SmartDashboard.putNumber("Drive Left Trim", drive_l_trim);
-		SmartDashboard.putNumber("Shoot Right Trim", shoot_r_trim);
-		SmartDashboard.putNumber("Shoot Left Trim", shoot_l_trim);
-		SmartDashboard.putNumber("ShootX Right Trim", shootX_r_trim);
-		SmartDashboard.putNumber("ShootX Left Trim", shootX_l_trim);
+//		SmartDashboard.putNumber("Drive Right Trim", drive_r_trim);
+//		SmartDashboard.putNumber("Drive Left Trim", drive_l_trim);
+//		SmartDashboard.putNumber("Shoot Right Trim", shoot_r_trim);
+//		SmartDashboard.putNumber("Shoot Left Trim", shoot_l_trim);
+//		SmartDashboard.putNumber("ShootX Right Trim", shootX_r_trim);
+//		SmartDashboard.putNumber("ShootX Left Trim", shootX_l_trim);
 		
+		SmartDashboard.putNumber("Shoot Trim", shoot_trim * 100);
+		SmartDashboard.putNumber("ShootX Trim", shootX_trim * 100);
+
 		SmartDashboard.putNumber("autoSpd", 0);
 
 		bdelay_shoot = bdelay_drive = 0;
 
 		// Acc
-		acc = new ADXL362(Accelerometer.Range.k2G);
+		accmt = new ADXL362(Accelerometer.Range.k2G);
 		
 		// Gyro
-		gyro = new ADXRS450_Gyro();
+		gyro = new AnalogGyro(0);
 		gyro.calibrate();
 		checkSense();
+		boolean[] arr = {true, false, true};
+		SmartDashboard.putBooleanArray("boolarray", arr);
 	}
 
-	long initial;
-	long fin;
+	String game_data;
+	double acc;
+	long last;
+	long current;
 	long dist;
 	double vel;
 	double tar;
+	double acc_trim;
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select
 	 * between different autonomous modes using the dashboard. The sendable chooser
@@ -180,9 +192,30 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-//		tar = Math.pow(Math.pow(acc.getX(), 2) + Math.pow(acc.getY(), 2) + Math.pow(acc.getZ(), 2), 0.5);
-		initial = System.currentTimeMillis();
+		game_data = DriverStation.getInstance().getGameSpecificMessage();
+		last = System.currentTimeMillis();
 		tar = gyro.getAngle();
+		dist = 0;
+		vel = 0;
+		acc_trim = 0;
+		acc_trim = calAcc(10);
+		acc = getAcc();
+	}
+	
+	private double getAcc() {
+		return Math.pow(Math.pow(accmt.getX(), 2) + Math.pow(accmt.getY(), 2), 0.5) - acc_trim;
+	}
+	
+	/**
+	 * Calibrate accelerometer
+	 * @return
+	 */
+	private double calAcc(int len) {
+		double sum = 0;
+		for(int i = 0; i < len; i++) {
+			sum += getAcc();
+		}
+		return sum/len;
 	}
 	
 	/*
@@ -202,16 +235,22 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-//		initial = System.currentTimeMillis();
-//		dist += (fin - initial) * vel;
-//		SmartDashboard.putNumber("dist", dist);
+		if(game_data.length() > 0) {
+			
+		}
 		checkSense();
-		fin = System.currentTimeMillis() - initial;
 		
-//		if(fin < 2000) driveAngle(.5, gyro, tar);
-		if(fin < 2000) driveAngle(SmartDashboard.getNumber("autoSpd", 0), gyro, tar);
-		
-//		fin = System.currentTimeMillis();
+		acc = getAcc();
+		current = System.currentTimeMillis();
+		double time = current - last;
+		last = System.currentTimeMillis();
+		// Calcs
+		vel += time * acc;
+		dist += vel * time + .5 * acc * Math.pow(time, 2);
+		SmartDashboard.putNumber("dist", dist);
+		SmartDashboard.putNumber("vel", vel);
+		SmartDashboard.putNumber("acc", acc);
+		drive(.45,.45);
 	}
 
 	/**
@@ -227,39 +266,54 @@ public class Robot extends IterativeRobot {
 	
 	private void checkSense() {
 		SmartDashboard.putNumber("Angle", gyro.getAngle());
-		SmartDashboard.putNumber("accX", acc.getX());
-		SmartDashboard.putNumber("accY", acc.getY());
-		SmartDashboard.putNumber("accZ", acc.getZ());
+		SmartDashboard.putNumber("accX", accmt.getX());
+		SmartDashboard.putNumber("accY", accmt.getY());
+		SmartDashboard.putNumber("accZ", accmt.getZ());
 	}
 
 	private void checkShoot() {
 		// Right side will trim up (5) and down (4) within range 0 to 1
-		if (r_stick.getRawButton(11) && shoot_r_trim < 1)
-			shoot_r_trim += .01;
-		if (r_stick.getRawButton(10) && shoot_r_trim > 0)
-			shoot_r_trim -= .01;
-		SmartDashboard.putNumber("Shoot Right Trim", shoot_r_trim);
+//		if (r_stick.getRawButton(11) && shoot_r_trim < 1)
+//			shoot_r_trim += .01;
+//		if (r_stick.getRawButton(10) && shoot_r_trim > 0)
+//			shoot_r_trim -= .01;
+//		SmartDashboard.putNumber("Shoot Right Trim", shoot_r_trim);
+//
+//		// Left side will trim up (6) and down (7) within range 0 to 1
+//		if (l_stick.getRawButton(6) && shoot_l_trim < 1)
+//			shoot_l_trim += .01;
+//		if (l_stick.getRawButton(7) && shoot_l_trim > 0)
+//			shoot_l_trim -= .01;
+//		SmartDashboard.putNumber("Shoot Left Trim", shoot_l_trim);
+//
+//		// Right side will trim up (9) and down (8) within range 0 to 1
+//		if (r_stick.getRawButton(9) && shootX_r_trim < 1)
+//			shootX_r_trim += .01;
+//		if (r_stick.getRawButton(8) && shootX_r_trim > 0)
+//			shootX_r_trim -= .01;
+//		SmartDashboard.putNumber("ShootX Right Trim", shootX_r_trim);
+//
+//		// Left side will trim up (9) and down (8) within range 0 to 1
+//		if (l_stick.getRawButton(9) && shootX_l_trim < 1)
+//			shootX_l_trim += .01;
+//		if (l_stick.getRawButton(8) && shootX_l_trim > 0)
+//			shootX_l_trim -= .01;
+//		SmartDashboard.putNumber("ShootX Left Trim", shootX_l_trim);
 
-		// Left side will trim up (6) and down (7) within range 0 to 1
-		if (l_stick.getRawButton(6) && shoot_l_trim < 1)
-			shoot_l_trim += .01;
-		if (l_stick.getRawButton(7) && shoot_l_trim > 0)
-			shoot_l_trim -= .01;
-		SmartDashboard.putNumber("Shoot Left Trim", shoot_l_trim);
+		
+		// Shoot rim up (6) and down (7) within range 0 to 1
+		if (l_stick.getRawButton(6) && shoot_trim < 1)
+			shoot_trim += .01;
+		if (l_stick.getRawButton(7) && shoot_trim > 0)
+			shoot_trim -= .01;
+		SmartDashboard.putNumber("Shoot Trim", shoot_trim * 100);
 
-		// Right side will trim up (9) and down (8) within range 0 to 1
-		if (r_stick.getRawButton(9) && shootX_r_trim < 1)
-			shootX_r_trim += .01;
-		if (r_stick.getRawButton(8) && shootX_r_trim > 0)
-			shootX_r_trim -= .01;
-		SmartDashboard.putNumber("ShootX Right Trim", shootX_r_trim);
-
-		// Left side will trim up (9) and down (8) within range 0 to 1
-		if (l_stick.getRawButton(9) && shootX_l_trim < 1)
-			shootX_l_trim += .01;
-		if (l_stick.getRawButton(8) && shootX_l_trim > 0)
-			shootX_l_trim -= .01;
-		SmartDashboard.putNumber("ShootX Left Trim", shootX_l_trim);
+		// ShootX will trim up (9) and down (8) within range 0 to 1
+		if (l_stick.getRawButton(9) && shootX_trim < 1)
+			shootX_trim += .01;
+		if (l_stick.getRawButton(8) && shootX_trim > 0)
+			shootX_trim -= .01;
+		SmartDashboard.putNumber("ShootX Trim", shootX_trim * 100);
 
 		// Shoot off/on
 		if (r_stick.getRawButton(7) && bdelay_shoot++ > 8) {
@@ -268,31 +322,31 @@ public class Robot extends IterativeRobot {
 		}
 
 		if (SmartDashboard.getBoolean("Shoot(X)", false /*default*/) && r_stick.getTrigger()) { // Shoot High
-			shoot.tankDrive(-shoot_l_trim, -shoot_r_trim);
-			shootX.tankDrive(-shootX_l_trim, -shootX_r_trim);
+			shoot.tankDrive(-shoot_trim, -shoot_trim);
+			shootX.tankDrive(-shootX_trim, -shootX_trim);
 		}
 		if (SmartDashboard.getBoolean("Shoot(X)", false /*default*/) && l_stick.getTrigger()) { // Shooter Low
-			shoot.tankDrive(-.7 * shoot_l_trim, -.7 * shoot_r_trim);
-			shootX.tankDrive(-.7 * shootX_l_trim, -.7 * shootX_r_trim);
+			shoot.tankDrive(-.7 * shoot_trim, -.7 * shoot_trim);
+			shootX.tankDrive(-.7 * shootX_trim, -.7 * shootX_trim);
 		}
 	}
 
 	private void checkDrive() {
-		// Right side will trim up (5) and down (4) within range 0 to 1
-		if (r_stick.getRawButton(5) && drive_r_trim < 1)
-			drive_r_trim += .01;
-		if (r_stick.getRawButton(4) && drive_r_trim > 0)
-			drive_r_trim -= .01;
-		SmartDashboard.putNumber("Drive Right Trim", drive_r_trim);
+//		// Right side will trim up (5) and down (4) within range 0 to 1
+//		if (r_stick.getRawButton(5) && drive_r_trim < 1)
+//			drive_r_trim += .01;
+//		if (r_stick.getRawButton(4) && drive_r_trim > 0)
+//			drive_r_trim -= .01;
+//		SmartDashboard.putNumber("Drive Right Trim", drive_r_trim);
+//
+//		// Light side will trim up (5) and down (4) within range 0 to 1
+//		if (l_stick.getRawButton(5) && drive_l_trim < 1)
+//			drive_l_trim += .01;
+//		if (l_stick.getRawButton(4) && drive_l_trim > 0)
+//			drive_l_trim -= .01;
+//		SmartDashboard.putNumber("Drive Left Trim", drive_l_trim);
 
-		// Light side will trim up (5) and down (4) within range 0 to 1
-		if (l_stick.getRawButton(5) && drive_l_trim < 1)
-			drive_l_trim += .01;
-		if (l_stick.getRawButton(4) && drive_l_trim > 0)
-			drive_l_trim -= .01;
-		SmartDashboard.putNumber("Drive Left Trim", drive_l_trim);
-
-		SmartDashboard.putNumber("Drive Speed", (drive_spd = (1 - r_stick.getRawAxis(2)) / 2));
+		SmartDashboard.putNumber("Drive Speed", (drive_spd = (1 - r_stick.getRawAxis(2)) / 2) * 100);
 
 		// Drive off/on
 		if (r_stick.getRawButton(6) && bdelay_drive++ > 8) {
@@ -302,8 +356,8 @@ public class Robot extends IterativeRobot {
 		
 		thresh = SmartDashboard.getNumber("thresh", 0);
 		if (SmartDashboard.getBoolean("Drive", false))
-			drive(- (l_stick.getY() > 0 ? (thresh+l_stick.getY()/(1-thresh)) : (l_stick.getY()/(1-thresh)-thresh))   * drive_spd * drive_l_trim,
-					-  (r_stick.getY() > 0 ? (thresh+r_stick.getY()/(1-thresh)) : (r_stick.getY()/(1-thresh)-thresh))   * drive_spd * drive_r_trim);
+			drive(- (l_stick.getY() > 0 ? (thresh+l_stick.getY()/(1-thresh)) : (l_stick.getY()/(1-thresh)-thresh))   * drive_spd,
+					-  (r_stick.getY() > 0 ? (thresh+r_stick.getY()/(1-thresh)) : (r_stick.getY()/(1-thresh)-thresh))   * drive_spd);
 	}
 	
 	/**
@@ -321,11 +375,11 @@ public class Robot extends IterativeRobot {
 	 * Drive at an angle to the gyro
 	 * 
 	 * @param spd - speed to drive
-	 * @param gyro2 - AnalogGyro to base target
+	 * @param gyro - AnalogGyro to base target
 	 * @param angle - target angle (-1,1)
 	 */
-	private void driveAngle(double spd, ADXRS450_Gyro gyro2, double angle) {
-		double adj = (gyro2.getAngle() - angle)/180;
+	private void driveAngle(double spd, AnalogGyro gyro, double angle) {
+		double adj = (gyro.getAngle() - angle)/180;
 		drive.tankDrive(
 				constrain(spd - adj),
 				constrain(spd + adj));
@@ -340,7 +394,7 @@ public class Robot extends IterativeRobot {
 	}
 	
 	private void checkDraw() {
-		SmartDashboard.putNumber("Draw Speed Master", (draw_spd = (1 - l_stick.getRawAxis(2)) / 2));
+		SmartDashboard.putNumber("Draw Speed Master", 100 * (draw_spd = (1 - l_stick.getRawAxis(2)) / 2));
 		if (l_stick.getRawButton(2)) {
 			draw_motors[1].set(1 * draw_spd);
 			SmartDashboard.putString("Draw", "left in");
