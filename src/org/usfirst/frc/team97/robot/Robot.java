@@ -167,8 +167,6 @@ public class Robot extends IterativeRobot {
 		gyro = new AnalogGyro(0);
 		gyro.calibrate();
 		checkSense();
-		boolean[] arr = {true, false, true};
-		SmartDashboard.putBooleanArray("boolarray", arr);
 	}
 
 	String game_data;
