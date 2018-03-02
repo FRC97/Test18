@@ -170,24 +170,23 @@ public class Robot extends IterativeRobot {
 		
 		// Auto input vals
 		SmartDashboard.putNumber("auto delay", 0);
-		SmartDashboard.putNumber("start", 0);
+		SmartDashboard.putString("start pos", "R");
 		SmartDashboard.putNumber("auto speed", .5);
 		SmartDashboard.putNumber("center capable", 0);
 		SmartDashboard.putNumber("center force", 1);
 
 	}
 
-	// Auto vals
+	Auto auto;
+	// Auto input vals
 	String game_data;
-	double auto_delay; // delay for left/right
-	int start; // Left: -1, Center: 0, Right: 1
+	// Left: 'L', Center: 'C', Right: 'R'
+	// Force right: 'R', Force left: 'L', No force: 'C'
+	char low, high, start_pos, center_force;
+	long auto_delay; // delay for left/right
 	double auto_speed; // 0-1
-	double center_capable; // < 0 if they can low, > 0 for center delay overide
-	int center_force; // Force right: 1, Force left: -1
-	
-	// Auto distances
-	final double 
-	
+	long center_capable; // < 0 if they can low, > 0 for center delay overide
+		
 	double acc;
 	long last;
 	long current;
@@ -211,11 +210,14 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousInit() {
 		game_data = DriverStation.getInstance().getGameSpecificMessage();
-		auto_delay = SmartDashboard.getNumber("auto delay", 0);
-		start = (int) SmartDashboard.getNumber("start", 0);
+		low = game_data.charAt(0);
+		high = game_data.charAt(1);
+		auto_delay = (long) SmartDashboard.getNumber("auto delay", 0);
+		start_pos = SmartDashboard.getString("start_pos", "R").charAt(0);
 		auto_speed = SmartDashboard.getNumber("auto speed", .5);
-		center_capable = SmartDashboard.getNumber("center capable", 0);
-		center_force = (int) SmartDashboard.getNumber("center force", 1);
+		center_capable = (long) SmartDashboard.getNumber("center capable", 0);
+		center_force = SmartDashboard.getString("center force", "R").charAt(0);
+		auto = new Auto(low, high, start_pos, auto_delay, auto_speed, center_capable, center_force);
 		
 		last = System.currentTimeMillis();
 		tar = gyro.getAngle();
@@ -265,9 +267,14 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		if(game_data.length() > 0) {
-			
-		}
+		long elapsed = System.currentTimeMillis() - start_time;
+//		if(game_data.length() > 0) {
+//			if(start_pos != 'C') { // left/right
+//				if(high == start_pos) {
+//					if(elapsed )
+//				}
+//			}
+//		}
 		checkSense();
 		
 		acc = getAcc();
@@ -280,8 +287,8 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("dist", dist);
 		SmartDashboard.putNumber("vel", vel);
 		SmartDashboard.putNumber("acc", acc);
-		if(System.currentTimeMillis() - start_time < 2000)
-			drive(SmartDashboard.getNumber("autoSpd", 0),SmartDashboard.getNumber("autoSpd", 0));
+//		if(elapsed < 2000)
+//			drive(SmartDashboard.getNumber("autoSpd", 0),SmartDashboard.getNumber("autoSpd", 0));
 	}
 
 	/**
