@@ -167,9 +167,27 @@ public class Robot extends IterativeRobot {
 		gyro = new AnalogGyro(0);
 		gyro.calibrate();
 		checkSense();
+		
+		// Auto input vals
+		SmartDashboard.putNumber("auto delay", 0);
+		SmartDashboard.putNumber("start", 0);
+		SmartDashboard.putNumber("auto speed", .5);
+		SmartDashboard.putNumber("center capable", 0);
+		SmartDashboard.putNumber("center force", 1);
+
 	}
 
+	// Auto vals
 	String game_data;
+	double auto_delay; // delay for left/right
+	int start; // Left: -1, Center: 0, Right: 1
+	double auto_speed; // 0-1
+	double center_capable; // < 0 if they can low, > 0 for center delay overide
+	int center_force; // Force right: 1, Force left: -1
+	
+	// Auto distances
+	final double 
+	
 	double acc;
 	long last;
 	long current;
@@ -193,6 +211,12 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousInit() {
 		game_data = DriverStation.getInstance().getGameSpecificMessage();
+		auto_delay = SmartDashboard.getNumber("auto delay", 0);
+		start = (int) SmartDashboard.getNumber("start", 0);
+		auto_speed = SmartDashboard.getNumber("auto speed", .5);
+		center_capable = SmartDashboard.getNumber("center capable", 0);
+		center_force = (int) SmartDashboard.getNumber("center force", 1);
+		
 		last = System.currentTimeMillis();
 		tar = gyro.getAngle();
 		dist = 0;
