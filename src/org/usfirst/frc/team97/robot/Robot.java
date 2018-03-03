@@ -217,7 +217,8 @@ public class Robot extends IterativeRobot {
 		auto_speed = SmartDashboard.getNumber("auto speed", .5);
 		center_capable = (long) SmartDashboard.getNumber("center capable", 0);
 		center_force = SmartDashboard.getString("center force", "R").charAt(0);
-		auto = new Auto(low, high, start_pos, auto_delay, auto_speed, center_capable, center_force);
+		auto = new Auto(low, high, start_pos, auto_delay, auto_speed,
+				center_capable, center_force, drive, shoot, shootX, gyro);
 		
 		last = System.currentTimeMillis();
 		tar = gyro.getAngle();
@@ -416,18 +417,18 @@ public class Robot extends IterativeRobot {
 	 * @param gyro - AnalogGyro to base target
 	 * @param angle - target angle (-1,1)
 	 */
-	private void driveAngle(double spd, AnalogGyro gyro, double angle) {
+	protected void driveAngle(double spd, AnalogGyro gyro, double angle) {
 		double adj = (gyro.getAngle() - angle)/180;
 		drive.tankDrive(
 				constrain(spd - adj),
 				constrain(spd + adj));
 	}
 	
-	private static double constrain(double num, double max, double min) {
+	protected static double constrain(double num, double max, double min) {
 		return (num > max) ? 1 : (num < min) ? 0 : num;
 	}
 	
-	private static double constrain(double num) {
+	static double constrain(double num) {
 		return constrain(num, 1, 0);
 	}
 	

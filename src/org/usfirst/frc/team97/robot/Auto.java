@@ -3,6 +3,9 @@ package org.usfirst.frc.team97.robot;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+
 public class Auto {
 	
 	protected static final long
@@ -28,9 +31,21 @@ public class Auto {
 	second_ = 0,
 	second_mid_to_center = 0;
 	
+	private static final long shoot_time = 1000;
+	
 	// [[completed, action type, action value][...]]
 	List<long[]> path = new ArrayList<long[]>();
 	private double spd;
+	private long cmd_start_time;
+	private double cmd_start_angle;
+	
+	private static final double
+	low_shoot_spd = 0,
+	high_shoot_spd = 0,
+	turn_spd = .5;
+	
+	DifferentialDrive drive, shootL, shootX;
+	AnalogGyro gyro;
 	
 	/**
 	 * 
@@ -43,8 +58,14 @@ public class Auto {
 	 * @param center_force: if we are center, always go to this side
 	 */
 	public Auto(char low, char high, char start_pos, long auto_delay, double auto_speed, long center_capable,
-			char center_force) {
+			char center_force, DifferentialDrive drive, DifferentialDrive shootL, DifferentialDrive shootX,
+			AnalogGyro gyro) {
 		spd = auto_speed;
+		this.drive = drive;
+		this.shootL = shootL;
+		this.shootX = shootX;
+		this.gyro = gyro;
+		
 		addToPath(delay, auto_delay);
 		
 		//Center
@@ -100,5 +121,35 @@ public class Auto {
 
 	private void turnIn(char side) {
 		addToPath(turn, side == 'R' ? -90: 90);
+	}
+	
+	protected void run(long now) {
+		if(path.size() > 0) {
+			long[] command = path.get(0);
+			switch((int) command[1]) {
+			
+			case (int) delay:
+				if(now - cmd_start_time > command[2]) rmFromPath(now);
+				break;
+				
+			case (int) turn:
+				if(command[2] > 0)
+					drive.tankDrive(spd, -spd);
+				else
+					drive.tankDrive(-spd, spd);
+				if(gyro.getAngle() > cmd_start_angle + command[2]) rmFromPath(now);
+				break;
+				
+			case (int) shoot:
+				shootL.tankDrive(low_shoot_spd, low_shoot_spd);
+				if(now - cmd_start_time > shoot_time) rmFromPath(now);
+			}
+		}
+	}
+	
+	private void rmFromPath(long now) {
+		path.remove(0);
+		cmd_start_time = now;
+		cmd_start_angle = gyro.getAngle();
 	}
 }
