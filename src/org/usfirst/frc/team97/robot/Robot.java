@@ -276,7 +276,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		auto.run(System.currentTimeMillis());
+		SmartDashboard.putString("auto path left", auto.run(System.currentTimeMillis()));
 		
 		
 		checkSense();

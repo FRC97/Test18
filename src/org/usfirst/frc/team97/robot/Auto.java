@@ -134,7 +134,7 @@ public class Auto {
 		addToPath(turn, side == 'R' ? -90: 90);
 	}
 	
-	protected void run(long now) {
+	protected String run(long now) {
 		if(path.size() > 0) {
 			long[] command = path.get(0);
 			switch((int) command[1]) {
@@ -174,6 +174,7 @@ public class Auto {
 					break;
 			}
 		}
+		return this.toString();
 	}
 	
 	protected static double constrain(double num, double max, double min) {
