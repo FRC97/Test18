@@ -21,14 +21,15 @@ public class Auto {
 	
 	// Auto distances -- inches
 	protected static final long
-	base_to_low = 168,
-	base_to_high = 324,
-	base_to_first_center = 0,
+	// TODO: Fix Issue with clearance when coming to the low goal -- only half inch
+	base_to_low = 149, // 148.5
+	base_to_high = 0,
+	base_to_first_center = 40,
 	base_to_second_mid = 0,
-	first_center_to_first_side = 0,
-	first_side_to_low = 0,
+	first_center_to_first_sideR = 110,
+	first_center_to_first_sideL = 120,
+	first_side_to_low = 109, // 108.5
 	low_to_fence = 0,
-	second_ = 0,
 	second_mid_to_center = 0;
 	
 	private static final long shoot_time = 1000;
@@ -73,7 +74,10 @@ public class Auto {
 			addToPath(move, base_to_first_center);
 			char dir = center_force == 'C' ? low : center_force;
 			turnOut(dir);
-			addToPath(move, first_center_to_first_side);
+			if(dir == 'R')
+				addToPath(move, first_center_to_first_sideR);
+			else
+				addToPath(move, first_center_to_first_sideL);				
 			turnIn(dir);
 			addToPath(move, first_side_to_low);
 			if(low == dir) { // We're going towards the low goal -> shoot
@@ -127,22 +131,32 @@ public class Auto {
 		if(path.size() > 0) {
 			long[] command = path.get(0);
 			switch((int) command[1]) {
-			
-			case (int) delay:
-				if(now - cmd_start_time > command[2]) rmFromPath(now);
-				break;
-				
-			case (int) turn:
-				if(command[2] > 0)
-					drive.tankDrive(spd, -spd);
-				else
-					drive.tankDrive(-spd, spd);
-				if(gyro.getAngle() > cmd_start_angle + command[2]) rmFromPath(now);
-				break;
-				
-			case (int) shoot:
-				shootL.tankDrive(low_shoot_spd, low_shoot_spd);
-				if(now - cmd_start_time > shoot_time) rmFromPath(now);
+				case (int) delay:
+					if(now - cmd_start_time > command[2]) rmFromPath(now);
+					break;
+					
+				case (int) turn:
+					if(command[2] > 0)
+						drive.tankDrive(turn_spd, -turn_spd);
+					else
+						drive.tankDrive(-turn_spd, turn_spd);
+					if(gyro.getAngle() > cmd_start_angle + command[2]) rmFromPath(now);
+					break;
+					
+				case (int) move:
+					drive.tankDrive(spd, spd);
+					if(now - cmd_start_time > command[2]) rmFromPath(now);
+					break;
+					
+				case (int) shoot:
+					shootL.tankDrive(low_shoot_spd, low_shoot_spd);
+					shootX.tankDrive(high_shoot_spd, high_shoot_spd);
+					if(now - cmd_start_time > shoot_time) rmFromPath(now);
+					
+				case (int) reverse:
+					drive.tankDrive(-spd, -spd);
+					if(now - cmd_start_time > command[2]) rmFromPath(now);
+					break;
 			}
 		}
 	}
@@ -151,5 +165,20 @@ public class Auto {
 		path.remove(0);
 		cmd_start_time = now;
 		cmd_start_angle = gyro.getAngle();
+	}
+	
+	public String toString() {
+		String str = "";
+		for(long[] item:path) {
+			for(long val:item)
+				str += val + ", ";
+			str += "\n";
+		}
+		return str;
+	}
+	
+	public static void main(String[] args) {
+		Auto auto = new Auto('R', 'R', 'R', 1000, .7, -5, 'C', null, null, null, null);
+		System.out.println(auto);
 	}
 }

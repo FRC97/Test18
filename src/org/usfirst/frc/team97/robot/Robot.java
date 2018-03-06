@@ -268,14 +268,9 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		long elapsed = System.currentTimeMillis() - start_time;
-//		if(game_data.length() > 0) {
-//			if(start_pos != 'C') { // left/right
-//				if(high == start_pos) {
-//					if(elapsed )
-//				}
-//			}
-//		}
+		auto.run(System.currentTimeMillis());
+		
+		
 		checkSense();
 		
 		acc = getAcc();
