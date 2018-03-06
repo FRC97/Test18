@@ -24,15 +24,18 @@ public class Auto {
 	// Auto distances -- inches
 	protected static final long
 	// TODO: Fix Issue with clearance when coming to the low goal -- only half inch
-	base_to_low = 149, // 148.5
-	base_to_high = 0,
+	base_side_offset = 40,
+	side_to_low = 110, // 109.82
+	side_to_high = 193, // 193.25
 	base_to_first_center = 40,
 	base_to_second_mid = 0,
-	first_center_to_first_sideR = 110,
-	first_center_to_first_sideL = 120,
+	first_center_to_first_sideR = 127,
+	first_center_to_first_sideL = 137,
 	first_side_to_low = 109, // 108.5
-	low_to_fence = 0,
-	second_mid_to_center = 0;
+	low_to_fence = 18, // 17.75
+	second_mid_to_center = 0,
+	high_turn_ang = 5, // 5.07
+	low_turn_ang = 9; // 9.05
 	
 	private static final long shoot_time = 1000;
 	
