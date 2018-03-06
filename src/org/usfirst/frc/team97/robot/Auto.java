@@ -201,8 +201,11 @@ public class Auto {
 		for(long[] item:path) {
 			for(long val:item)
 				str += val + ", ";
-			str += "\n";
+			str += "... ";
 		}
+		str += "time: " + (System.currentTimeMillis() - cmd_start_time) +
+				" ... angle: " + (gyro.getAngle() - cmd_start_angle) +
+				" ... encoder: " + (enc.get() - cmd_start_enc);
 		return str;
 	}
 }
