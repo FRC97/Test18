@@ -14,7 +14,8 @@ public class Auto {
 	move = 1,
 	turn = 2,
 	shoot = 3,
-	reverse = 4;
+	reverse = 4,
+	move_gyro = 5; // move straight with the gyro
 	
 	protected static final long cmp = 1, inc = 0; // complete, incomplete
 	
@@ -163,8 +164,24 @@ public class Auto {
 					drive.tankDrive(-spd, -spd);
 					if(enc.get() - cmd_start_enc > command[2] * 10) rmFromPath(now);
 					break;
+
+				case (int) move_gyro:
+					double adj = (gyro.getAngle() - cmd_start_angle)/180;
+					drive.tankDrive(
+						constrain(spd - adj),
+						constrain(spd + adj));
+					if(enc.get() - cmd_start_enc > command[2] * 10) rmFromPath(now);
+					break;
 			}
 		}
+	}
+	
+	protected static double constrain(double num, double max, double min) {
+		return (num > max) ? 1 : (num < min) ? 0 : num;
+	}
+	
+	static double constrain(double num) {
+		return constrain(num, 1, 0);
 	}
 	
 	private void rmFromPath(long now) {
