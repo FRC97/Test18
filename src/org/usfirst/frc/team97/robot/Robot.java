@@ -35,6 +35,7 @@ import com.ctre.phoenix.motorcontrol.can.*;
 import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Spark;
@@ -95,6 +96,9 @@ public class Robot extends IterativeRobot {
 	// Camera
 	UsbCamera cam_serv_front;
 	UsbCamera cam_serv_back;
+	
+	// Encoder
+	Encoder enc;
 	
 	/**
 	 * This function is run when the robot is first started up and should be used
@@ -168,6 +172,9 @@ public class Robot extends IterativeRobot {
 		gyro.calibrate();
 		checkSense();
 		
+		// Encoder
+		enc = new Encoder(0, 0);
+		
 		// Auto input vals
 		SmartDashboard.putNumber("auto delay", 0);
 		SmartDashboard.putString("start pos", "R");
@@ -218,7 +225,8 @@ public class Robot extends IterativeRobot {
 		center_capable = (long) SmartDashboard.getNumber("center capable", 0);
 		center_force = SmartDashboard.getString("center force", "R").charAt(0);
 		auto = new Auto(low, high, start_pos, auto_delay, auto_speed,
-				center_capable, center_force, drive, shoot, shootX, gyro);
+				center_capable, center_force, drive, shoot, shootX, gyro,
+				enc, System.currentTimeMillis());
 		
 		last = System.currentTimeMillis();
 		tar = gyro.getAngle();

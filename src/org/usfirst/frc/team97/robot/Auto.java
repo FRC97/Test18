@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.wpi.first.wpilibj.AnalogGyro;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 
 public class Auto {
@@ -39,6 +40,7 @@ public class Auto {
 	private double spd;
 	private long cmd_start_time;
 	private double cmd_start_angle;
+	private long cmd_start_enc;
 	
 	private static final double
 	low_shoot_spd = 0,
@@ -47,6 +49,7 @@ public class Auto {
 	
 	DifferentialDrive drive, shootL, shootX;
 	AnalogGyro gyro;
+	Encoder enc;
 	
 	/**
 	 * 
@@ -60,12 +63,15 @@ public class Auto {
 	 */
 	public Auto(char low, char high, char start_pos, long auto_delay, double auto_speed, long center_capable,
 			char center_force, DifferentialDrive drive, DifferentialDrive shootL, DifferentialDrive shootX,
-			AnalogGyro gyro) {
+			AnalogGyro gyro, Encoder enc, long now) {
 		spd = auto_speed;
 		this.drive = drive;
 		this.shootL = shootL;
 		this.shootX = shootX;
 		this.gyro = gyro;
+		this.enc = enc;
+		
+		reset_count(now);
 		
 		addToPath(delay, auto_delay);
 		
@@ -145,7 +151,7 @@ public class Auto {
 					
 				case (int) move:
 					drive.tankDrive(spd, spd);
-					if(now - cmd_start_time > command[2]) rmFromPath(now);
+					if(enc.get() - cmd_start_enc > command[2] * 10) rmFromPath(now);
 					break;
 					
 				case (int) shoot:
@@ -155,7 +161,7 @@ public class Auto {
 					
 				case (int) reverse:
 					drive.tankDrive(-spd, -spd);
-					if(now - cmd_start_time > command[2]) rmFromPath(now);
+					if(enc.get() - cmd_start_enc > command[2] * 10) rmFromPath(now);
 					break;
 			}
 		}
@@ -163,8 +169,13 @@ public class Auto {
 	
 	private void rmFromPath(long now) {
 		path.remove(0);
+		reset_count(now);
+	}
+	
+	private void reset_count(long now) {
 		cmd_start_time = now;
 		cmd_start_angle = gyro.getAngle();
+		cmd_start_enc = enc.get();		
 	}
 	
 	public String toString() {
@@ -175,10 +186,5 @@ public class Auto {
 			str += "\n";
 		}
 		return str;
-	}
-	
-	public static void main(String[] args) {
-		Auto auto = new Auto('R', 'R', 'R', 1000, .7, -5, 'C', null, null, null, null);
-		System.out.println(auto);
 	}
 }
