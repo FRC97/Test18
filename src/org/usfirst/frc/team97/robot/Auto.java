@@ -25,15 +25,15 @@ public class Auto {
 	protected static final long
 	// TODO: Fix Issue with clearance when coming to the low goal -- only half inch
 	base_side_offset = 40,
-	side_to_low = 110, // 109.82
-	side_to_high = 193, // 193.25
+	side_to_low = 110, // 109.82 at an angle
+	side_to_high = 193, // 193.25 at an angle
 	base_to_first_center = 40,
 	base_to_second_mid = 0,
 	first_center_to_first_sideR = 127,
 	first_center_to_first_sideL = 137,
 	first_side_to_low = 109, // 108.5
 	low_to_fence = 18, // 17.75
-	second_mid_to_center = 0,
+	second_mid_to_center = 100,
 	high_turn_ang = 5, // 5.07
 	low_turn_ang = 9; // 9.05
 	
@@ -102,16 +102,20 @@ public class Auto {
 			// If high is on our side and either there's no low or center can low -> High goal
 			if(start_pos == high && (start_pos != low || center_capable < 0))
 			{
-				addToPath(move, base_to_high);
-				turnOut(start_pos);
+				addToPath(move, base_side_offset);
+				turnOut(start_pos, high_turn_ang);
+				addToPath(move, side_to_high);
+				turnOut(start_pos, 90 - high_turn_ang);
 				addToPath(shoot, shoot_high);
 			}
 			
 			// If low is open and center cannot low (and not going high) -> Low goal
 			else if(start_pos == low && center_capable >= 0) {
 				if(center_capable > 0) addToPath(delay, center_capable);
-				addToPath(move, base_to_low);
-				turnOut(start_pos);
+				addToPath(move, base_side_offset);
+				turnOut(start_pos, low_turn_ang);
+				addToPath(move, side_to_low);
+				turnOut(start_pos, 90 - low_turn_ang);
 				addToPath(reverse, low_to_fence);
 				addToPath(shoot, shoot_low);
 			}
@@ -135,6 +139,14 @@ public class Auto {
 
 	private void turnIn(char side) {
 		addToPath(turn, side == 'R' ? -90: 90);
+	}
+	
+	private void turnOut(char side, long ang) {
+		addToPath(turn, side == 'R' ? ang: -ang);
+	}
+
+	private void turnIn(char side, long ang) {
+		addToPath(turn, side == 'R' ? -ang: ang);
 	}
 	
 	protected String run(long now) {
