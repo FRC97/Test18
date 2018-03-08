@@ -27,9 +27,6 @@
 // TODO: I still need to get the gyro working...
 
 package org.usfirst.frc.team97.robot;
-
-import java.sql.Date;
-
 import com.ctre.phoenix.motorcontrol.can.*;
 
 import edu.wpi.first.wpilibj.AnalogGyro;
@@ -42,11 +39,11 @@ import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.VictorSP;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.interfaces.Accelerometer;
+//import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.cscore.UsbCamera;
-import edu.wpi.first.wpilibj.ADXL362;
+//import edu.wpi.first.wpilibj.ADXL362;
 
 /**
  * This is the robot
@@ -88,10 +85,10 @@ public class Robot extends IterativeRobot {
 	double thresh = .2;
 
 	// Acc
-	ADXL362 accmt;
+//	ADXL362 accmt;
 	
 	// Gyro
-	AnalogGyro gyro;
+	ADXRS450_Gyro gyro;
 	
 	// Camera
 	UsbCamera cam_serv_front;
@@ -159,28 +156,28 @@ public class Robot extends IterativeRobot {
 		
 		SmartDashboard.putNumber("Shoot Trim", shoot_trim * 100);
 		SmartDashboard.putNumber("ShootX Trim", shootX_trim * 100);
-
-		SmartDashboard.putNumber("autoSpd", 0);
-
+		
+		SmartDashboard.putNumber("count", 0);
+		
 		bdelay_shoot = bdelay_drive = 0;
 
 		// Acc
-		accmt = new ADXL362(Accelerometer.Range.k2G);
+//		accmt = new ADXL362(Accelerometer.Range.k2G);
 		
 		// Gyro
-		gyro = new AnalogGyro(0);
+		gyro = new ADXRS450_Gyro();
 		gyro.calibrate();
 		checkSense();
 		
 		// Encoder
-		enc = new Encoder(0, 0);
+		enc = new Encoder(1, 0);
 		
 		// Auto input vals
 		SmartDashboard.putNumber("auto delay", 0);
 		SmartDashboard.putString("start pos", "R");
 		SmartDashboard.putNumber("auto speed", .5);
 		SmartDashboard.putNumber("center capable", 0);
-		SmartDashboard.putNumber("center force", 1);
+		SmartDashboard.putString("center force", "C");
 
 	}
 
@@ -194,15 +191,15 @@ public class Robot extends IterativeRobot {
 	double auto_speed; // 0-1
 	long center_capable; // < 0 if they can low, > 0 for center delay overide
 		
-	double acc;
+//	double acc;
 	long last;
 	long current;
 	long start_time;
 	double dist;
 	double vel;
 	double tar;
-	double acc_trim_x;
-	double acc_trim_y;
+//	double acc_trim_x;
+//	double acc_trim_y;
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select
 	 * between different autonomous modes using the dashboard. The sendable chooser
@@ -223,7 +220,7 @@ public class Robot extends IterativeRobot {
 		start_pos = SmartDashboard.getString("start_pos", "R").charAt(0);
 		auto_speed = SmartDashboard.getNumber("auto speed", .5);
 		center_capable = (long) SmartDashboard.getNumber("center capable", 0);
-		center_force = SmartDashboard.getString("center force", "R").charAt(0);
+		center_force = SmartDashboard.getString("center force", "C").charAt(0);
 		auto = new Auto(low, high, start_pos, auto_delay, auto_speed,
 				center_capable, center_force, drive, shoot, shootX, gyro,
 				enc, System.currentTimeMillis());
@@ -232,32 +229,32 @@ public class Robot extends IterativeRobot {
 		tar = gyro.getAngle();
 		dist = 0;
 		vel = 0;
-		acc = getAcc();
-		calAcc(10);
+//		acc = getAcc();
+//		calAcc(10);
 		
 		start_time = System.currentTimeMillis();
 	}
 	
-	private double getAcc() {
+//	private double getAcc() {
 //		double mag = Math.pow(Math.pow(accmt.getX() - acc_trim_x, 2) + Math.pow(accmt.getY() - acc_trim_y, 2), 0.5);
 //		return (accmt.getY() > 0) ? mag : -mag;
-		return accmt.getY() - acc_trim_y;
-	}
+//		return accmt.getY() - acc_trim_y;
+//	}
 	
-	/**
-	 * Calibrate accelerometer
-	 * @return
-	 */
-	private void calAcc(int len) {
-		double sum_x = 0;
-		double sum_y = 0;
-		for(int i = 0; i < len; i++) {
-			sum_x += accmt.getX();
-			sum_y += accmt.getY();
-		}
-		acc_trim_x = sum_x/len;
-		acc_trim_y = sum_y/len;
-	}
+//	/**
+//	 * Calibrate accelerometer
+//	 * @return
+//	 */
+//	private void calAcc(int len) {
+//		double sum_x = 0;
+//		double sum_y = 0;
+//		for(int i = 0; i < len; i++) {
+//			sum_x += accmt.getX();
+//			sum_y += accmt.getY();
+//		}
+//		acc_trim_x = sum_x/len;
+//		acc_trim_y = sum_y/len;
+//	}
 	
 	/*
 	 * Auto Data:
@@ -269,6 +266,16 @@ public class Robot extends IterativeRobot {
 	 * .8  - 2000 - 149"
 	 * .9  - 1500 - 
 	 * .7  - 5000 - 
+	 * 
+	 * Auto Data New and Improved:
+	 * enc count / dist (in)
+	 * 228/6m+5"
+	 * 244/6m+4.25"
+	 * 232/6m+6"
+	 * 204/6m-1"
+	 * 200/6m-1.5"
+	 * 248/6m+7"
+	 * Average = .9428 counts/in
 	 */
 
 	/**
@@ -278,18 +285,18 @@ public class Robot extends IterativeRobot {
 	public void autonomousPeriodic() {
 		SmartDashboard.putString("auto path remaining", auto.run(System.currentTimeMillis()));
 		
-		checkSense();
-		
-		acc = getAcc();
-		current = System.currentTimeMillis();
-		double time = current - last;
-		last = System.currentTimeMillis();
-		// Calcs
-		vel += time * acc;
-		dist += vel * time + .5 * acc * Math.pow(time, 2);
-		SmartDashboard.putNumber("dist", dist);
-		SmartDashboard.putNumber("vel", vel);
-		SmartDashboard.putNumber("acc", acc);
+//		checkSense();
+//		
+//		acc = getAcc();
+//		current = System.currentTimeMillis();
+//		double time = current - last;
+//		last = System.currentTimeMillis();
+//		// Calcs
+//		vel += time * acc;
+//		dist += vel * time + .5 * acc * Math.pow(time, 2);
+//		SmartDashboard.putNumber("dist", dist);
+//		SmartDashboard.putNumber("vel", vel);
+//		SmartDashboard.putNumber("acc", acc);
 //		if(elapsed < 2000)
 //			drive(SmartDashboard.getNumber("autoSpd", 0),SmartDashboard.getNumber("autoSpd", 0));
 	}
@@ -307,9 +314,9 @@ public class Robot extends IterativeRobot {
 	
 	private void checkSense() {
 		SmartDashboard.putNumber("Angle", gyro.getAngle());
-		SmartDashboard.putNumber("accX", accmt.getX());
-		SmartDashboard.putNumber("accY", accmt.getY());
-		SmartDashboard.putNumber("accZ", accmt.getZ());
+//		SmartDashboard.putNumber("accX", accmt.getX());
+//		SmartDashboard.putNumber("accY", accmt.getY());
+//		SmartDashboard.putNumber("accZ", accmt.getZ());
 	}
 
 	private void checkShoot() {
@@ -447,10 +454,10 @@ public class Robot extends IterativeRobot {
 			SmartDashboard.putString("Draw", "none");
 		}
 		if (r_stick.getRawButton(2)) {
-			draw_motors[0].set(-1 * draw_spd);
+			draw_motors[0].set(1 * draw_spd);
 			SmartDashboard.putString("Draw", "right in");
 		} else if (r_stick.getRawButton(3)) {
-			draw_motors[0].set(1 * draw_spd);
+			draw_motors[0].set(-1 * draw_spd);
 			SmartDashboard.putString("Draw", "right out");
 		} else {
 			draw_motors[0].set(0);
