@@ -54,7 +54,7 @@ public class Auto {
 	high_shoot_spd = 1,
 	turn_spd = .5,
 	conv_count_to_in = 1, //0.9428;
-	in_per_millis = 1;
+	in_per_millis = 25.47;
 	
 	DifferentialDrive drive, shootL, shootX;
 	ADXRS450_Gyro gyro;
@@ -85,59 +85,59 @@ public class Auto {
 		reset_count(now);
 		
 //		Test Auto Run
-		addToPath(move_mode, (long) SmartDashboard.getNumber("time", 0));
+//		addToPath(move_mode, (long) SmartDashboard.getNumber("time", 0));
 		
-//		addToPath(delay, auto_delay);
-//				
-//		//Center
-//		if(start_pos == 'C') {
-//			addToPath(move_mode, base_to_first_center);
-//			char dir = center_force == 'C' ? low : center_force;
-//			turnOut(dir);
-//			if(dir == 'R')
-//				addToPath(move_mode, first_center_to_first_sideR);
-//			else
-//				addToPath(move_mode, first_center_to_first_sideL);				
-//			turnIn(dir);
-//			addToPath(move_mode, first_side_to_low);
-//			if(low == dir) { // We're going towards the low goal -> shoot
-//				turnOut(dir);
-//				addToPath(reverse, low_to_fence);
-//				addToPath(shoot, shoot_low);
-//			}
-//		}
-//		
-//		// Right/Left
-//		else {			
-//			// If high is on our side and either there's no low or center can low -> High goal
-//			if(start_pos == high && (start_pos != low || center_capable < 0))
-//			{
-//				addToPath(move_mode, base_side_offset);
-//				turnOut(start_pos, high_turn_ang);
-//				addToPath(move_mode, side_to_high);
-//				turnOut(start_pos, 90 - high_turn_ang);
-//				addToPath(delay, 100);
-//				addToPath(shoot, shoot_high);
-//			}
-//			
-//			// If low is open and center cannot low (and not going high) -> Low goal
-//			else if(start_pos == low && center_capable >= 0) {
-//				if(center_capable > 0) addToPath(delay, center_capable);
-//				addToPath(move_mode, base_side_offset);
-//				turnOut(start_pos, low_turn_ang);
-//				addToPath(move_mode, side_to_low);
-//				turnOut(start_pos, 90 - low_turn_ang);
-//				addToPath(reverse, low_to_fence);
-//				addToPath(shoot, shoot_low);
-//			}
-//			
-//			// None or low only and center can low -> Center middle (get out of the way)
-//			else {
-//				addToPath(move_mode, base_to_second_mid);
-//				turnIn(start_pos);
-//				addToPath(move_mode, second_mid_to_center);
-//			}
-//		}
+		addToPath(delay, auto_delay);
+				
+		//Center
+		if(start_pos == 'C') {
+			addToPath(move_mode, base_to_first_center);
+			char dir = center_force == 'C' ? low : center_force;
+			turnOut(dir);
+			if(dir == 'R')
+				addToPath(move_mode, first_center_to_first_sideR);
+			else
+				addToPath(move_mode, first_center_to_first_sideL);				
+			turnIn(dir);
+			addToPath(move_mode, first_side_to_low);
+			if(low == dir) { // We're going towards the low goal -> shoot
+				turnOut(dir);
+				addToPath(reverse, low_to_fence);
+				addToPath(shoot, shoot_low);
+			}
+		}
+		
+		// Right/Left
+		else {			
+			// If high is on our side and either there's no low or center can low -> High goal
+			if(start_pos == high && (start_pos != low || center_capable < 0))
+			{
+				addToPath(move_mode, base_side_offset);
+				turnOut(start_pos, high_turn_ang);
+				addToPath(move_mode, side_to_high);
+				turnOut(start_pos, 90 - high_turn_ang);
+				addToPath(delay, 100);
+				addToPath(shoot, shoot_high);
+			}
+			
+			// If low is open and center cannot low (and not going high) -> Low goal
+			else if(start_pos == low && center_capable >= 0) {
+				if(center_capable > 0) addToPath(delay, center_capable);
+				addToPath(move_mode, base_side_offset);
+				turnOut(start_pos, low_turn_ang);
+				addToPath(move_mode, side_to_low);
+				turnOut(start_pos, 90 - low_turn_ang);
+				addToPath(reverse, low_to_fence);
+				addToPath(shoot, shoot_low);
+			}
+			
+			// None or low only and center can low -> Center middle (get out of the way)
+			else {
+				addToPath(move_mode, base_to_second_mid);
+				turnIn(start_pos);
+				addToPath(move_mode, second_mid_to_center);
+			}
+		}
 	}
 	
 	private void addToPath(long action, long value) {
@@ -195,7 +195,7 @@ public class Auto {
 					
 				case (int) reverse:
 					drive.tankDrive(-spd, -spd);
-					if(enc.getRaw() - cmd_start_enc > command[2] / conv_count_to_in) rmFromPath(now);
+					if(now - cmd_start_time > command[2] * in_per_millis) rmFromPath(now);
 					break;
 
 				case (int) move_enc_gyro:
@@ -210,12 +210,12 @@ public class Auto {
 					drive.tankDrive(
 						constrain(spd - adj),
 						constrain(spd + adj));
-					if(now - cmd_start_time > command[2] / in_per_millis) rmFromPath(now);
+					if(now - cmd_start_time > command[2] * in_per_millis) rmFromPath(now);
 					break;
 					
 				case (int) move_time:
 					drive.tankDrive(spd, spd);
-					if(now - cmd_start_time > command[2] / in_per_millis) rmFromPath(now);
+					if(now - cmd_start_time > command[2] * in_per_millis) rmFromPath(now);
 					break;
 					
 			}

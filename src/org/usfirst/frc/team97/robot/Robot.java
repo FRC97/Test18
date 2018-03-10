@@ -175,7 +175,7 @@ public class Robot extends IterativeRobot {
 		// Auto input vals
 		SmartDashboard.putNumber("auto delay", 0);
 		SmartDashboard.putString("start pos", "R");
-		SmartDashboard.putNumber("auto speed", .5);
+		SmartDashboard.putNumber("auto speed", .6);
 		SmartDashboard.putNumber("center capable", 0);
 		SmartDashboard.putString("center force", "C");
 
