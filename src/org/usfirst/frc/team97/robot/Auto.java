@@ -26,16 +26,15 @@ public class Auto {
 	
 	// Auto distances -- inches
 	protected static final long
-	// TODO: Fix Issue with clearance when coming to the low goal -- only half inch
 	base_side_offset = 40,
 	side_to_low = 110, // 109.82 at an angle
-	side_to_high = 293, // 193.25 at an angle
+	side_to_high = 350, // 193.25 at an angle
 	base_to_first_center = 40,
-	base_to_second_mid = 0,
-	first_center_to_first_sideR = 127,
-	first_center_to_first_sideL = 137,
+	base_to_second_mid = 275,
+	first_center_to_first_sideR = 110,
+	first_center_to_first_sideL = 120,
 	first_side_to_low = 109, // 108.5
-	low_to_fence = 25, // 17.75
+	low_to_fence = 35, // 17.75
 	second_mid_to_center = 100,
 	high_turn_ang = 5, // 5.07
 	low_turn_ang = 9; // 9.05
@@ -50,9 +49,9 @@ public class Auto {
 	private long cmd_start_enc;
 	
 	private static final double
-	low_shoot_spd = .75,
+	low_shoot_spd = .8,
 	high_shoot_spd = 1,
-	turn_spd = .5,
+	turn_spd = .55,
 	conv_count_to_in = 1, //0.9428;
 	in_per_millis = 25.47;
 	
@@ -105,7 +104,7 @@ public class Auto {
 			turnIn(dir, 90);
 			addToPath(move_mode, first_side_to_low);
 			if(low == dir) { // We're going towards the low goal -> shoot
-				turnOut(dir, 90);
+				turnOut(dir, 70);
 				addToPath(reverse, low_to_fence);
 				addToPath(delay, 300);
 				addToPath(shoot, shoot_low);
@@ -118,10 +117,10 @@ public class Auto {
 			if(start_pos == high && (start_pos != low || center_capable < 0))
 			{
 				addToPath(move_mode, base_side_offset);
-				turnOut(start_pos, high_turn_ang);
+//				turnOut(start_pos, high_turn_ang);
 				addToPath(move_mode, side_to_high);
-				turnOut(start_pos, 90 - high_turn_ang);
-				addToPath(delay, 100);
+				turnOut(start_pos, 90 - 0/*high_turn_ang*/);
+//				addToPath(delay, 100);
 				addToPath(delay, 300);
 				addToPath(shoot, shoot_high);
 			}
@@ -140,7 +139,7 @@ public class Auto {
 			
 			// None or low only and center can low -> Center middle (get out of the way)
 			else {
-				addToPath(move_mode, 110/*base_to_second_mid*/);
+				addToPath(move_mode, base_to_second_mid);
 				turnIn(start_pos, 90);
 				addToPath(move_mode, second_mid_to_center);
 			}
@@ -177,11 +176,14 @@ public class Auto {
 					break;
 					
 				case (int) turn:
-					if(command[2] > 0)
+					if(command[2] > 0) {
 						drive.tankDrive(turn_spd, -turn_spd);
-					else
+						if(gyro.getAngle() > cmd_start_angle + command[2]) rmFromPath(now);
+					}
+					else {
 						drive.tankDrive(-turn_spd, turn_spd);
-					if(gyro.getAngle() > cmd_start_angle + command[2]) rmFromPath(now);
+						if(gyro.getAngle() < cmd_start_angle + command[2]) rmFromPath(now);
+					}
 					break;
 					
 				case (int) move_enc:

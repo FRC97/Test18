@@ -190,7 +190,7 @@ public class Robot extends IterativeRobot {
 	char low, high, start_pos = 'R', center_force = 'C';
 	long auto_delay = 0; // delay for left/right
 	double auto_speed = 0.6; // 0-1
-	long center_capable = 0; // < 0 if they can low, > 0 for center delay overide
+	long center_capable = -1; // < 0 if they can low, > 0 for center delay overide
 		
 //	double acc;
 	long last;
@@ -366,6 +366,12 @@ public class Robot extends IterativeRobot {
 		if (l_stick.getRawButton(8) && shootX_trim > 0)
 			shootX_trim -= .01;
 		SmartDashboard.putNumber("ShootX Trim", shootX_trim * 100);
+		
+		// Reverse
+		if (SmartDashboard.getBoolean("Shoot(X)", false /*default*/) && l_stick.getRawButton(4)) {
+			shoot.tankDrive(.7*shoot_trim, .7*shoot_trim);
+			shootX.tankDrive(.7*shootX_trim, .7*shootX_trim);
+		}
 
 		// Shoot off/on
 		if (r_stick.getRawButton(7) && bdelay_shoot++ > 8) {
@@ -377,9 +383,10 @@ public class Robot extends IterativeRobot {
 			shoot.tankDrive(-shoot_trim, -shoot_trim);
 			shootX.tankDrive(-shootX_trim, -shootX_trim);
 		}
+		
 		if (SmartDashboard.getBoolean("Shoot(X)", false /*default*/) && l_stick.getTrigger()) { // Shooter Low
-			shoot.tankDrive(-.7 * shoot_trim, -.7 * shoot_trim);
-			shootX.tankDrive(-.7 * shootX_trim, -.7 * shootX_trim);
+			shoot.tankDrive(-.85 * shoot_trim, -.85 * shoot_trim);
+			shootX.tankDrive(-.85 * shootX_trim, -.85 * shootX_trim);
 		}
 	}
 
@@ -398,7 +405,14 @@ public class Robot extends IterativeRobot {
 //			drive_l_trim -= .01;
 //		SmartDashboard.putNumber("Drive Left Trim", drive_l_trim);
 
-		SmartDashboard.putNumber("Drive Speed", (drive_spd = (1 - r_stick.getRawAxis(2)) / 2) * 100);
+		
+		if(r_stick.getRawButton(5))
+			drive_spd = 1;
+		else if(r_stick.getRawButton(4))
+			drive_spd = .5;
+		else
+			drive_spd = (1 - r_stick.getRawAxis(2)) / 2;
+		SmartDashboard.putNumber("Drive Speed", drive_spd * 100);
 
 		// Drive off/on
 		if (r_stick.getRawButton(6) && bdelay_drive++ > 8) {
