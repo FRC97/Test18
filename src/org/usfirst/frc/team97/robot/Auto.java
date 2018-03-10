@@ -12,11 +12,13 @@ public class Auto {
 	
 	protected static final long
 	delay = 0,
-	move = 1,
+	move_enc = 1,
 	turn = 2,
 	shoot = 3,
 	reverse = 4,
-	move_gyro = 5; // move straight with the gyro
+	move_enc_gyro = 5, // move straight with the gyro + enc
+	move_time_gyro = 6, // move straight with the gyro + time
+	move_time = 7; // move straight with time
 	
 	protected static final long cmp = 1, inc = 0; // complete, incomplete
 	
@@ -51,7 +53,8 @@ public class Auto {
 	low_shoot_spd = .7,
 	high_shoot_spd = 1,
 	turn_spd = .5,
-	conv_count_to_in = 1; //0.9428;
+	conv_count_to_in = 1, //0.9428;
+	in_per_millis = 1;
 	
 	DifferentialDrive drive, shootL, shootX;
 	ADXRS450_Gyro gyro;
@@ -77,23 +80,26 @@ public class Auto {
 		this.gyro = gyro;
 		this.enc = enc;
 		
+		long move_mode = move_time_gyro;
+
 		reset_count(now);
 		
-		addToPath(move_gyro, (long) SmartDashboard.getNumber("count", 0));
+//		Test Auto Run
+		addToPath(move_mode, (long) SmartDashboard.getNumber("time", 0));
 		
 //		addToPath(delay, auto_delay);
 //				
 //		//Center
 //		if(start_pos == 'C') {
-//			addToPath(move, base_to_first_center);
+//			addToPath(move_mode, base_to_first_center);
 //			char dir = center_force == 'C' ? low : center_force;
 //			turnOut(dir);
 //			if(dir == 'R')
-//				addToPath(move, first_center_to_first_sideR);
+//				addToPath(move_mode, first_center_to_first_sideR);
 //			else
-//				addToPath(move, first_center_to_first_sideL);				
+//				addToPath(move_mode, first_center_to_first_sideL);				
 //			turnIn(dir);
-//			addToPath(move, first_side_to_low);
+//			addToPath(move_mode, first_side_to_low);
 //			if(low == dir) { // We're going towards the low goal -> shoot
 //				turnOut(dir);
 //				addToPath(reverse, low_to_fence);
@@ -106,9 +112,9 @@ public class Auto {
 //			// If high is on our side and either there's no low or center can low -> High goal
 //			if(start_pos == high && (start_pos != low || center_capable < 0))
 //			{
-//				addToPath(move, base_side_offset);
+//				addToPath(move_mode, base_side_offset);
 //				turnOut(start_pos, high_turn_ang);
-//				addToPath(move, side_to_high);
+//				addToPath(move_mode, side_to_high);
 //				turnOut(start_pos, 90 - high_turn_ang);
 //				addToPath(delay, 100);
 //				addToPath(shoot, shoot_high);
@@ -117,9 +123,9 @@ public class Auto {
 //			// If low is open and center cannot low (and not going high) -> Low goal
 //			else if(start_pos == low && center_capable >= 0) {
 //				if(center_capable > 0) addToPath(delay, center_capable);
-//				addToPath(move, base_side_offset);
+//				addToPath(move_mode, base_side_offset);
 //				turnOut(start_pos, low_turn_ang);
-//				addToPath(move, side_to_low);
+//				addToPath(move_mode, side_to_low);
 //				turnOut(start_pos, 90 - low_turn_ang);
 //				addToPath(reverse, low_to_fence);
 //				addToPath(shoot, shoot_low);
@@ -127,9 +133,9 @@ public class Auto {
 //			
 //			// None or low only and center can low -> Center middle (get out of the way)
 //			else {
-//				addToPath(move, base_to_second_mid);
+//				addToPath(move_mode, base_to_second_mid);
 //				turnIn(start_pos);
-//				addToPath(move, second_mid_to_center);
+//				addToPath(move_mode, second_mid_to_center);
 //			}
 //		}
 	}
@@ -157,6 +163,7 @@ public class Auto {
 	protected String run(long now) {		
 		if(path.size() > 0) {
 			long[] command = path.get(0);
+			double adj = 0;
 			switch((int) command[1]) {
 				case (int) delay:
 					if(now - cmd_start_time > command[2]) rmFromPath(now);
@@ -170,7 +177,7 @@ public class Auto {
 					if(gyro.getAngle() > cmd_start_angle + command[2]) rmFromPath(now);
 					break;
 					
-				case (int) move:
+				case (int) move_enc:
 					drive.tankDrive(spd, spd);
 					if(enc.getRaw() - cmd_start_enc > command[2] / conv_count_to_in) rmFromPath(now);
 					break;
@@ -191,13 +198,26 @@ public class Auto {
 					if(enc.getRaw() - cmd_start_enc > command[2] / conv_count_to_in) rmFromPath(now);
 					break;
 
-				case (int) move_gyro:
-					double adj = (gyro.getAngle() - cmd_start_angle)/180;
+				case (int) move_enc_gyro:
+					adj = (gyro.getAngle() - cmd_start_angle)/180;
 					drive.tankDrive(
 						constrain(spd - adj),
 						constrain(spd + adj));
 					if(enc.getRaw() - cmd_start_enc > command[2] / conv_count_to_in) rmFromPath(now);
 					break;
+				case (int) move_time_gyro:
+					adj = (gyro.getAngle() - cmd_start_angle)/180;
+					drive.tankDrive(
+						constrain(spd - adj),
+						constrain(spd + adj));
+					if(now - cmd_start_time > command[2] / in_per_millis) rmFromPath(now);
+					break;
+					
+				case (int) move_time:
+					drive.tankDrive(spd, spd);
+					if(now - cmd_start_time > command[2] / in_per_millis) rmFromPath(now);
+					break;
+					
 			}
 		}
 		return this.toString();

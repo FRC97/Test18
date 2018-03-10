@@ -139,11 +139,11 @@ public class Robot extends IterativeRobot {
 		l_stick = new Joystick(1);
 
 		// SmartDashboard init
-		SmartDashboard.putBoolean("Drive", false);
+		SmartDashboard.putBoolean("Drive", true);
 		
 		SmartDashboard.putNumber("thresh", thresh);
 		
-		SmartDashboard.putBoolean("Shoot(X)", false);
+		SmartDashboard.putBoolean("Shoot(X)", true);
 
 		SmartDashboard.putString("Draw", "none");
 
@@ -157,7 +157,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Shoot Trim", shoot_trim * 100);
 		SmartDashboard.putNumber("ShootX Trim", shootX_trim * 100);
 		
-		SmartDashboard.putNumber("count", 0);
+		SmartDashboard.putNumber("time", 0);
 		
 		bdelay_shoot = bdelay_drive = 0;
 
