@@ -181,15 +181,16 @@ public class Robot extends IterativeRobot {
 
 	}
 
+	// TODO: SET AUTO DATA HERE
 	Auto auto;
 	// Auto input vals
 	String game_data;
 	// Left: 'L', Center: 'C', Right: 'R'
 	// Force right: 'R', Force left: 'L', No force: 'C'
-	char low, high, start_pos, center_force;
-	long auto_delay; // delay for left/right
-	double auto_speed; // 0-1
-	long center_capable; // < 0 if they can low, > 0 for center delay overide
+	char low, high, start_pos = 'R', center_force = 'C';
+	long auto_delay = 0; // delay for left/right
+	double auto_speed = 0.6; // 0-1
+	long center_capable = 0; // < 0 if they can low, > 0 for center delay overide
 		
 //	double acc;
 	long last;
@@ -216,14 +217,17 @@ public class Robot extends IterativeRobot {
 		game_data = DriverStation.getInstance().getGameSpecificMessage();
 		low = game_data.charAt(0);
 		high = game_data.charAt(1);
-		auto_delay = (long) SmartDashboard.getNumber("auto delay", 0);
-		start_pos = SmartDashboard.getString("start_pos", "R").charAt(0);
-		auto_speed = SmartDashboard.getNumber("auto speed", .5);
-		center_capable = (long) SmartDashboard.getNumber("center capable", 0);
-		center_force = SmartDashboard.getString("center force", "C").charAt(0);
+//		auto_delay = (long) SmartDashboard.getNumber("auto delay", 0);
+//		start_pos = SmartDashboard.getString("start_pos", "R").charAt(0);
+//		auto_speed = SmartDashboard.getNumber("auto speed", .5);
+//		center_capable = (long) SmartDashboard.getNumber("center capable", 0);
+//		center_force = SmartDashboard.getString("center force", "C").charAt(0);
+//		auto = new Auto(low, high, start_pos, auto_delay, auto_speed,
+//		center_capable, center_force, drive, shoot, shootX, gyro,
+//		enc, System.currentTimeMillis());
 		auto = new Auto(low, high, start_pos, auto_delay, auto_speed,
-				center_capable, center_force, drive, shoot, shootX, gyro,
-				enc, System.currentTimeMillis());
+		center_capable, center_force, drive, shoot, shootX, gyro,
+		enc, System.currentTimeMillis());
 		
 		last = System.currentTimeMillis();
 		tar = gyro.getAngle();

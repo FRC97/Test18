@@ -29,13 +29,13 @@ public class Auto {
 	// TODO: Fix Issue with clearance when coming to the low goal -- only half inch
 	base_side_offset = 40,
 	side_to_low = 110, // 109.82 at an angle
-	side_to_high = 193, // 193.25 at an angle
+	side_to_high = 293, // 193.25 at an angle
 	base_to_first_center = 40,
 	base_to_second_mid = 0,
 	first_center_to_first_sideR = 127,
 	first_center_to_first_sideL = 137,
 	first_side_to_low = 109, // 108.5
-	low_to_fence = 18, // 17.75
+	low_to_fence = 25, // 17.75
 	second_mid_to_center = 100,
 	high_turn_ang = 5, // 5.07
 	low_turn_ang = 9; // 9.05
@@ -50,7 +50,7 @@ public class Auto {
 	private long cmd_start_enc;
 	
 	private static final double
-	low_shoot_spd = .7,
+	low_shoot_spd = .75,
 	high_shoot_spd = 1,
 	turn_spd = .5,
 	conv_count_to_in = 1, //0.9428;
@@ -84,8 +84,12 @@ public class Auto {
 
 		reset_count(now);
 		
+//		addToPath(turn, 90);
+		
 //		Test Auto Run
 //		addToPath(move_mode, (long) SmartDashboard.getNumber("time", 0));
+//		addToPath(delay, 10000);
+//		addToPath(shoot, shoot_low);
 		
 		addToPath(delay, auto_delay);
 				
@@ -93,22 +97,23 @@ public class Auto {
 		if(start_pos == 'C') {
 			addToPath(move_mode, base_to_first_center);
 			char dir = center_force == 'C' ? low : center_force;
-			turnOut(dir);
+			turnOut(dir, 90);
 			if(dir == 'R')
 				addToPath(move_mode, first_center_to_first_sideR);
 			else
 				addToPath(move_mode, first_center_to_first_sideL);				
-			turnIn(dir);
+			turnIn(dir, 90);
 			addToPath(move_mode, first_side_to_low);
 			if(low == dir) { // We're going towards the low goal -> shoot
-				turnOut(dir);
+				turnOut(dir, 90);
 				addToPath(reverse, low_to_fence);
+				addToPath(delay, 300);
 				addToPath(shoot, shoot_low);
 			}
 		}
 		
 		// Right/Left
-		else {			
+		else {
 			// If high is on our side and either there's no low or center can low -> High goal
 			if(start_pos == high && (start_pos != low || center_capable < 0))
 			{
@@ -117,6 +122,7 @@ public class Auto {
 				addToPath(move_mode, side_to_high);
 				turnOut(start_pos, 90 - high_turn_ang);
 				addToPath(delay, 100);
+				addToPath(delay, 300);
 				addToPath(shoot, shoot_high);
 			}
 			
@@ -128,13 +134,14 @@ public class Auto {
 				addToPath(move_mode, side_to_low);
 				turnOut(start_pos, 90 - low_turn_ang);
 				addToPath(reverse, low_to_fence);
+				addToPath(delay, 300);
 				addToPath(shoot, shoot_low);
 			}
 			
 			// None or low only and center can low -> Center middle (get out of the way)
 			else {
-				addToPath(move_mode, base_to_second_mid);
-				turnIn(start_pos);
+				addToPath(move_mode, 110/*base_to_second_mid*/);
+				turnIn(start_pos, 90);
 				addToPath(move_mode, second_mid_to_center);
 			}
 		}
@@ -156,9 +163,9 @@ public class Auto {
 		addToPath(turn, side == 'R' ? ang: -ang);
 	}
 
-//	private void turnIn(char side, long ang) {
-//		addToPath(turn, side == 'R' ? -ang: ang);
-//	}
+	private void turnIn(char side, long ang) {
+		addToPath(turn, side == 'R' ? -ang: ang);
+	}
 	
 	protected String run(long now) {		
 		if(path.size() > 0) {
@@ -192,6 +199,7 @@ public class Auto {
 						shootX.tankDrive(-low_shoot_spd, -low_shoot_spd);
 					}
 					if(now - cmd_start_time > shoot_time) rmFromPath(now);
+					break;
 					
 				case (int) reverse:
 					drive.tankDrive(-spd, -spd);
@@ -237,6 +245,7 @@ public class Auto {
 	}
 	
 	private void reset_count(long now) {
+//		SmartDashboard.putString("test", SmartDashboard.getString("test", "reset count: ") + ", " + now);
 		cmd_start_time = now;
 		cmd_start_angle = gyro.getAngle();
 		cmd_start_enc = enc.getRaw();
