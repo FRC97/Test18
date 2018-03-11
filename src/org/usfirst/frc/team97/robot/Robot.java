@@ -121,7 +121,7 @@ public class Robot extends IterativeRobot {
 		shootX_motors = new Spark[2];
 
 		for (int i = 0; i < 2; i++)
-			(shootX_motors[i] = new Spark(i+6)).setSafetyEnabled(false);
+			(shootX_motors[i] = new Spark(i + 6)).setSafetyEnabled(false);
 
 		draw_motors = new VictorSP[4];
 
@@ -187,10 +187,10 @@ public class Robot extends IterativeRobot {
 	String game_data;
 	// Left: 'L', Center: 'C', Right: 'R'
 	// Force right: 'R', Force left: 'L', No force: 'C'
-	char low, high, start_pos = 'R', center_force = 'C';
+	char low, high, start_pos = 'C', center_force = 'C';
 	long auto_delay = 0; // delay for left/right
 	double auto_speed = 0.6; // 0-1
-	long center_capable = -1; // < 0 if they can low, > 0 for center delay overide
+	long center_capable = 0; // < 0 if they can low, > 0 for center delay overide
 		
 //	double acc;
 	long last;
@@ -385,8 +385,8 @@ public class Robot extends IterativeRobot {
 		}
 		
 		if (SmartDashboard.getBoolean("Shoot(X)", false /*default*/) && l_stick.getTrigger()) { // Shooter Low
-			shoot.tankDrive(-.85 * shoot_trim, -.85 * shoot_trim);
-			shootX.tankDrive(-.85 * shootX_trim, -.85 * shootX_trim);
+			shoot.tankDrive(-.75 * shoot_trim, -.75 * shoot_trim);
+			shootX.tankDrive(-.75 * shootX_trim, -.75 * shootX_trim);
 		}
 	}
 

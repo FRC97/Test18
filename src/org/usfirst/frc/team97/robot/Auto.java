@@ -28,16 +28,19 @@ public class Auto {
 	protected static final long
 	base_side_offset = 40,
 	side_to_low = 110, // 109.82 at an angle
-	side_to_high = 350, // 193.25 at an angle
+	side_to_high = 245, // 193.25 at an angle
 	base_to_first_center = 40,
 	base_to_second_mid = 275,
-	first_center_to_first_sideR = 110,
-	first_center_to_first_sideL = 120,
+	first_center_to_first_sideR = 140,
+	first_center_to_first_sideL = 130,
 	first_side_to_low = 109, // 108.5
 	low_to_fence = 35, // 17.75
 	second_mid_to_center = 100,
 	high_turn_ang = 5, // 5.07
-	low_turn_ang = 9; // 9.05
+	low_turn_ang = 9, // 9.05
+	direct_to_low = 120,
+	direct_to_far = 130,
+	far_to_low = 100;
 	
 	private static final long shoot_time = 1000;
 	
@@ -49,7 +52,7 @@ public class Auto {
 	private long cmd_start_enc;
 	
 	private static final double
-	low_shoot_spd = .8,
+	low_shoot_spd = .75,
 	high_shoot_spd = 1,
 	turn_spd = .55,
 	conv_count_to_in = 1, //0.9428;
@@ -94,18 +97,33 @@ public class Auto {
 				
 		//Center
 		if(start_pos == 'C') {
-			addToPath(move_mode, base_to_first_center);
+//			addToPath(move_mode, base_to_first_center);
+//			char dir = center_force == 'C' ? low : center_force;
+//			turnOut(dir, 90);
+//			if(dir == 'R')
+//				addToPath(move_mode, first_center_to_first_sideR);
+//			else
+//				addToPath(move_mode, first_center_to_first_sideL);				
+//			turnIn(dir, 90);
+//			addToPath(move_mode, first_side_to_low);
+//			if(low == dir) { // We're going towards the low goal -> shoot
+//				turnOut(dir, 70);
+//				addToPath(reverse, low_to_fence);
+//				addToPath(delay, 300);
+//				addToPath(shoot, shoot_low);
+//			}
 			char dir = center_force == 'C' ? low : center_force;
-			turnOut(dir, 90);
-			if(dir == 'R')
-				addToPath(move_mode, first_center_to_first_sideR);
-			else
-				addToPath(move_mode, first_center_to_first_sideL);				
-			turnIn(dir, 90);
-			addToPath(move_mode, first_side_to_low);
-			if(low == dir) { // We're going towards the low goal -> shoot
-				turnOut(dir, 70);
-				addToPath(reverse, low_to_fence);
+			if(dir == 'R') {
+				addToPath(reverse, direct_to_low);
+				addToPath(delay, 300);
+				addToPath(shoot, shoot_low);
+			}
+			else {
+				addToPath(reverse, base_to_first_center);
+				turnOut(dir, 80);
+				addToPath(reverse, direct_to_far);
+				turnIn(dir);
+				addToPath(reverse, far_to_low);
 				addToPath(delay, 300);
 				addToPath(shoot, shoot_low);
 			}
@@ -119,8 +137,9 @@ public class Auto {
 				addToPath(move_mode, base_side_offset);
 //				turnOut(start_pos, high_turn_ang);
 				addToPath(move_mode, side_to_high);
-				turnOut(start_pos, 90 - 0/*high_turn_ang*/);
+				turnOut(start_pos, 110 - 0/*high_turn_ang*/);
 //				addToPath(delay, 100);
+				addToPath(move_time_gyro, 10);
 				addToPath(delay, 300);
 				addToPath(shoot, shoot_high);
 			}
@@ -177,13 +196,29 @@ public class Auto {
 					
 				case (int) turn:
 					if(command[2] > 0) {
-						drive.tankDrive(turn_spd, -turn_spd);
-						if(gyro.getAngle() > cmd_start_angle + command[2]) rmFromPath(now);
-					}
-					else {
-						drive.tankDrive(-turn_spd, turn_spd);
-						if(gyro.getAngle() < cmd_start_angle + command[2]) rmFromPath(now);
-					}
+					drive.tankDrive(turn_spd, -turn_spd);
+					if(gyro.getAngle() > cmd_start_angle + command[2]) rmFromPath(now);
+				}
+				else {
+					drive.tankDrive(-turn_spd, turn_spd);
+					if(gyro.getAngle() < cmd_start_angle + command[2]) rmFromPath(now);
+				}
+//					adj = (gyro.getAngle() - command[2])/360;
+//					SmartDashboard.putNumber("adj", adj);
+//					if(command[2] > 0) {
+//					drive.tankDrive(constrain(turn_spd-adj), -constrain(turn_spd-adj));
+//					if(gyro.getAngle() > cmd_start_angle + command[2]) rmFromPath(now);
+//				}
+//				else {
+//					drive.tankDrive(-constrain(turn_spd+adj), constrain(turn_spd+adj));
+//					if(gyro.getAngle() < cmd_start_angle + command[2]) rmFromPath(now);
+//				}
+//					double target = command[2] + cmd_start_angle;
+//					SmartDashboard.putNumber("target", target);
+//					adj = (target - gyro.getAngle())/360;
+//					SmartDashboard.putNumber("adj constrained", constrain(adj * turn_spd, -.6, .6));
+//					drive.tankDrive(constrain(adj * turn_spd, -.6, .6), -constrain(adj * turn_spd, -.6, .6));
+//					if(gyro.getAngle() < target + 2 && gyro.getAngle() > target - 2) {SmartDashboard.putNumber("turn left", gyro.getAngle());rmFromPath(now);};
 					break;
 					
 				case (int) move_enc:
@@ -234,7 +269,7 @@ public class Auto {
 	}
 	
 	protected static double constrain(double num, double max, double min) {
-		return (num > max) ? 1 : (num < min) ? 0 : num;
+		return (num > max) ? max : (num < min) ? min : num;
 	}
 	
 	static double constrain(double num) {
